@@ -345,7 +345,7 @@ export function Settings() {
         <p className="text-sm text-muted-foreground">{db.settings.pinHash ? "পিন চালু আছে" : "পিন বন্ধ"}</p>
         <div className="mt-2 flex gap-2">
           <input className="field" type="password" inputMode="numeric" maxLength={6} placeholder="৪-৬ সংখ্যা" value={pin} onChange={(e) => setPinVal(e.target.value.replace(/\D/g, ""))} />
-          <button className="btn bg-primary text-primary-foreground" onClick={async () => { if (pin.length < 4) return toast.error("কমপক্ষে ৪ সংখ্যা"); await setPin(pin); setPinVal(""); toast.success("পিন সেট হয়েছে"); }}>সেট</button>
+          <button className="btn bg-primary text-primary-foreground" onClick={async () => { if (pin.length < 4) return void toast.error("কমপক্ষে ৪ সংখ্যা"); await setPin(pin); setPinVal(""); toast.success("পিন সেট হয়েছে"); }}>সেট</button>
         </div>
         {db.settings.pinHash && <button className="btn mt-2 border text-danger" onClick={() => confirm("পিন বন্ধ করবেন?") && setPin(null)}>পিন বন্ধ করুন</button>}
         <p className="mt-2 text-xs text-muted-foreground">পিন শুধু অ্যাপ খোলা আটকায়; এটি তথ্য এনক্রিপ্ট করে না।</p>

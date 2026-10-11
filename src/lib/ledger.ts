@@ -17,7 +17,7 @@ export interface Customer {
 
 export interface Tx {
   id: string;
-  customerId?: string;
+  customerId?: string | undefined;
   type: TxType;
   amount: number;
   date: number;
@@ -39,8 +39,8 @@ export interface AuditEntry {
 
 export interface Settings {
   shopName: string;
-  pinHash?: string;
-  pinSalt?: string;
+  pinHash?: string | undefined;
+  pinSalt?: string | undefined;
   lastBackupAt?: number;
   dark: boolean;
 }
@@ -136,7 +136,7 @@ export const uid = () =>
   (crypto.randomUUID?.() ?? Date.now().toString(36) + Math.random().toString(36).slice(2));
 
 // ---------- customers ----------
-export function saveCustomer(c: Omit<Customer, "id" | "createdAt" | "updatedAt"> & { id?: string }) {
+export function saveCustomer(c: Omit<Customer, "id" | "createdAt" | "updatedAt"> & { id?: string | undefined }) {
   const d = getDB();
   const now = Date.now();
   if (c.id) {
@@ -165,7 +165,7 @@ export function deleteCustomer(id: string) {
 }
 
 // ---------- transactions ----------
-export function saveTx(t: Omit<Tx, "id" | "createdAt" | "updatedAt"> & { id?: string }) {
+export function saveTx(t: Omit<Tx, "id" | "createdAt" | "updatedAt"> & { id?: string | undefined }) {
   if (!(t.amount > 0) || !isFinite(t.amount)) throw new Error("সঠিক টাকার পরিমাণ দিন");
   t.amount = Math.round(t.amount * 100) / 100;
   const d = getDB();
@@ -183,7 +183,7 @@ export function saveTx(t: Omit<Tx, "id" | "createdAt" | "updatedAt"> & { id?: st
 }
 
 /** Detects an identical entry saved in the last 60 seconds. */
-export function isLikelyDuplicate(t: { customerId?: string; type: TxType; amount: number }) {
+export function isLikelyDuplicate(t: { customerId?: string | undefined; type: TxType; amount: number }) {
   const now = Date.now();
   return getDB().txs.some(
     (x) => !x.deletedAt && x.customerId === t.customerId && x.type === t.type && x.amount === t.amount && now - x.createdAt < 60000,

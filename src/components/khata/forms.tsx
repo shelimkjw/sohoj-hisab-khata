@@ -23,10 +23,10 @@ export function CustomerForm({ open, onClose, customer, onSaved }: { open: boole
   }));
   const set = (k: keyof typeof f) => (e: { target: { value: string } }) => setF({ ...f, [k]: e.target.value });
   const submit = () => {
-    if (!f.name.trim()) return toast.error("নাম লিখুন");
-    if (f.phone && !/^[0-9+\-\s০-৯]{6,15}$/.test(f.phone)) return toast.error("ফোন নম্বর সঠিক নয়");
+    if (!f.name.trim()) return void toast.error("নাম লিখুন");
+    if (f.phone && !/^[0-9+\-\s০-৯]{6,15}$/.test(f.phone)) return void toast.error("ফোন নম্বর সঠিক নয়");
     const amt = Number(f.opening || 0);
-    if (!(amt >= 0) || !isFinite(amt)) return toast.error("শুরুর ব্যালেন্স সঠিক নয়");
+    if (!(amt >= 0) || !isFinite(amt)) return void toast.error("শুরুর ব্যালেন্স সঠিক নয়");
     try {
       const id = saveCustomer({
         id: customer?.id,
@@ -81,9 +81,9 @@ export function TxForm({ open, onClose, tx, presetType, presetCustomer }: { open
 
   const submit = () => {
     if (busy) return;
-    if (!(amt > 0) || !isFinite(amt)) return toast.error("সঠিক টাকার পরিমাণ দিন");
-    if (amt > 1e10) return toast.error("পরিমাণ অনেক বড়");
-    if (needsCustomer && !customerId) return toast.error("গ্রাহক নির্বাচন করুন");
+    if (!(amt > 0) || !isFinite(amt)) return void toast.error("সঠিক টাকার পরিমাণ দিন");
+    if (amt > 1e10) return void toast.error("পরিমাণ অনেক বড়");
+    if (needsCustomer && !customerId) return void toast.error("গ্রাহক নির্বাচন করুন");
     const cid = needsCustomer ? customerId : undefined;
     if (!tx && isLikelyDuplicate({ customerId: cid, type, amount: amt }) && !confirm("একই লেনদেন এইমাত্র যোগ হয়েছে। আবার যোগ করবেন?")) return;
     setBusy(true);
