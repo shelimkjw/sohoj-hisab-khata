@@ -92,10 +92,15 @@ export function Customers({ onSelect, open }: { onSelect: (id: string) => void; 
   const [q, setQ] = useState("");
   const list = useMemo(() => {
     const s = q.trim().toLowerCase();
+    const last = new Map<string, number>();
+    for (const t of db.txs) {
+      if (!t.customerId || t.deletedAt) continue;
+      last.set(t.customerId, Math.max(last.get(t.customerId) ?? 0, t.updatedAt));
+    }
     return activeCustomers(db)
       .filter((c) => !s || c.name.toLowerCase().includes(s) || c.phone.includes(s))
-      .map((c) => ({ c, b: customerBalance(db, c.id) }))
-      .sort((a, b) => a.c.name.localeCompare(b.c.name, "bn"));
+      .map((c) => ({ c, b: customerBalance(db, c.id), at: Math.max(c.updatedAt, last.get(c.id) ?? 0) }))
+      .sort((a, b) => b.at - a.at);
   }, [db, q]);
   return (
     <div className="space-y-3">
