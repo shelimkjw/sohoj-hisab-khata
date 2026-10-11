@@ -12,6 +12,8 @@ export default defineConfig({
     // Redirect TanStack Start's bundled server entry to src/server.ts (our SSR error wrapper).
     // nitro/vite builds from this
     server: { entry: "server" },
+    // Android build (CAPACITOR=1): emit a static single-page shell the phone can load with no server.
+    ...(process.env['CAPACITOR'] ? { spa: { enabled: true } } : {}),
   },
   vite: {
     plugins: [

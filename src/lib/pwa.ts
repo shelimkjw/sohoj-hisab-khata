@@ -11,6 +11,7 @@ export async function registerPWA() {
   const refused =
     !import.meta.env.PROD ||
     inIframe ||
+    !!(window as unknown as { Capacitor?: { isNativePlatform?: () => boolean } }).Capacitor?.isNativePlatform?.() ||
     h.startsWith("id-preview--") ||
     h.startsWith("preview--") ||
     h === "lovableproject.com" ||

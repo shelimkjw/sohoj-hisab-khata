@@ -109,10 +109,52 @@ function load() {
   }
 }
 
+// ---------- storage backends ----------
+// Android app: SQLite is the source of truth (localStorage kept as a secondary mirror).
+// Web/PWA: localStorage.
+let native = false;
+let writeQueue: Promise<void> = Promise.resolve();
+const errorListeners = new Set<(msg: string) => void>();
+export const onStorageError = (fn: (msg: string) => void) => {
+  errorListeners.add(fn);
+  return () => errorListeners.delete(fn);
+};
+export const storageKind = () => (native ? "SQLite" : "browser");
+
+export async function initStorage() {
+  load();
+  const { Capacitor } = await import("@capacitor/core");
+  if (!Capacitor.isNativePlatform()) return;
+  const store = await import("./sqlite-store");
+  const fromSql = await store.loadAll();
+  native = true;
+  if (fromSql) {
+    db = { ...empty(), ...fromSql, settings: { ...empty().settings, ...fromSql.settings } };
+    listeners.forEach((l) => l());
+  } else if (db.customers.length || db.txs.length) {
+    await store.persistDiff(empty(), db); // one-time migration from earlier localStorage data
+  }
+}
+
 function commit(next: DB) {
-  localStorage.setItem(KEY, JSON.stringify(next)); // throws before state changes if storage fails
+  const prev = db;
+  try {
+    localStorage.setItem(KEY, JSON.stringify(next));
+  } catch (e) {
+    if (!native) throw e; // on web, refuse the change if it can't be saved
+  }
   db = next;
   listeners.forEach((l) => l());
+  if (native) {
+    writeQueue = writeQueue.then(async () => {
+      try {
+        const store = await import("./sqlite-store");
+        await store.persistDiff(prev, next);
+      } catch {
+        errorListeners.forEach((f) => f("ডাটাবেসে সংরক্ষণ ব্যর্থ — অ্যাপ বন্ধ করবেন না, আবার চেষ্টা করুন"));
+      }
+    });
+  }
 }
 
 export function getDB() {
@@ -310,6 +352,24 @@ export function downloadFile(name: string, content: string, mime: string) {
 }
 
 export async function shareOrDownload(name: string, content: string, mime: string) {
+  if (native) {
+    // Android app: save to the Documents folder, then open Android's share sheet
+    const { Filesystem, Directory, Encoding } = await import("@capacitor/filesystem");
+    const { Share } = await import("@capacitor/share");
+    await Filesystem.writeFile({ path: name, data: content, directory: Directory.Cache, encoding: Encoding.UTF8 });
+    try {
+      await Filesystem.writeFile({ path: "TaliKhata/" + name, data: content, directory: Directory.Documents, encoding: Encoding.UTF8, recursive: true });
+    } catch {
+      /* Documents may be unavailable; cache copy is still shared */
+    }
+    const { uri } = await Filesystem.getUri({ path: name, directory: Directory.Cache });
+    try {
+      await Share.share({ title: name, url: uri, dialogTitle: name });
+    } catch {
+      /* user closed share sheet */
+    }
+    return;
+  }
   const file = new File([content], name, { type: mime });
   const nav = navigator as Navigator & { canShare?: (d: unknown) => boolean };
   if (nav.canShare?.({ files: [file] })) {
