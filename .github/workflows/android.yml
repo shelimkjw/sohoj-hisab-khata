@@ -19,7 +19,11 @@ jobs:
         with:
           distribution: temurin
           java-version: 21
-      - uses: android-actions/setup-android@v3
+      - name: Check Android SDK (pre-installed on GitHub runner)
+        run: |
+          echo "ANDROID_HOME=$ANDROID_HOME"
+          test -d "$ANDROID_HOME" || { echo "::error::Android SDK not found"; exit 1; }
+          echo "sdk.dir=$ANDROID_HOME" > android/local.properties
 
       - name: Install dependencies
         run: bun install --frozen-lockfile || bun install
