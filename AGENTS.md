@@ -15,3 +15,5 @@
 - Deletes are soft (`deletedAt`) with an audit entry — preserves a trail and lets backups merge by ID without duplicates.
 - The app is a single route with in-page tabs — so every screen is available offline after the first visit.
 - Service worker is registered only via `src/lib/pwa.ts` — keeps it out of the editor preview.
+- Android app is Capacitor (`capacitor.config.ts`, committed `android/` project); in the app, SQLite (`src/lib/sqlite-store.ts`) is the source of truth with append-only migrations — real on-device database that survives restarts and updates.
+- APKs are built only by `.github/workflows/android.yml` using `CAPACITOR=1` (TanStack SPA shell → `www/`) — the editor can't run the Android SDK; release signing comes solely from GitHub secrets.
