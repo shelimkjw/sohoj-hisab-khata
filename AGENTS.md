@@ -8,3 +8,10 @@
 > Commits you push to the connected branch sync back to Lovable and show up in
 > the editor, so keep the branch in a working state.
 <!-- LOVABLE:END -->
+
+## Architecture rules
+- All ledger data lives on-device in `src/lib/ledger.ts` (localStorage, no backend) — the app must work fully offline and never send financial data anywhere.
+- Customer balances are always derived from opening balance + non-deleted transactions — never store a separate balance, so ledger and balance can't drift.
+- Deletes are soft (`deletedAt`) with an audit entry — preserves a trail and lets backups merge by ID without duplicates.
+- The app is a single route with in-page tabs — so every screen is available offline after the first visit.
+- Service worker is registered only via `src/lib/pwa.ts` — keeps it out of the editor preview.
