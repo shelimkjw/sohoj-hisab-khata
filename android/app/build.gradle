@@ -1,5 +1,9 @@
 apply plugin: 'com.android.application'
 
+// CI passes a growing number so each new APK installs over the old one (data is kept)
+def ciVersionCode = Integer.parseInt(System.getenv("VERSION_CODE") ?: "1")
+def ciVersionName = "1.0." + (System.getenv("VERSION_CODE") ?: "0")
+
 android {
     namespace "com.talikhata.app"
     compileSdk rootProject.ext.compileSdkVersion
@@ -7,9 +11,8 @@ android {
         applicationId "com.talikhata.app"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        // CI passes a growing number so each new APK installs over the old one (data is kept)
-        versionCode (System.getenv("VERSION_CODE") ?: "1").toInteger()
-        versionName "1.0." + (System.getenv("VERSION_CODE") ?: "0")
+        versionCode ciVersionCode
+        versionName ciVersionName
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
