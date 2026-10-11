@@ -2,7 +2,8 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { ArrowLeft, BookOpen, Home as HomeIcon, ListOrdered, Lock, Plus, Settings as Cog, Users, BarChart3, Wifi, WifiOff } from "lucide-react";
 import { Toaster } from "@/components/ui/sonner";
-import { checkPin, useDB, type Tx, type TxType } from "@/lib/ledger";
+import { toast } from "sonner";
+import { checkPin, initStorage, onStorageError, useDB, type Tx, type TxType } from "@/lib/ledger";
 import { registerPWA } from "@/lib/pwa";
 import { CustomerForm, TxForm } from "@/components/khata/forms";
 import { CustomerDetail, Customers, Home, Reports, Settings, Transactions, type Open } from "@/components/khata/screens";
@@ -60,13 +61,26 @@ function App() {
   const [online, setOnline] = useState(true);
 
   useEffect(() => {
-    setReady(true);
+    initStorage()
+      .catch(() => toast.error("ডাটাবেস খোলা যায়নি — অ্যাপ আবার চালু করুন"))
+      .finally(() => setReady(true));
+    const offErr = onStorageError((m) => toast.error(m));
+    let removeBack: (() => void) | undefined;
+    void import("@capacitor/core").then(async ({ Capacitor }) => {
+      if (!Capacitor.isNativePlatform()) return;
+      const { App: CapApp } = await import("@capacitor/app");
+      const h = await CapApp.addListener("backButton", () => {
+        if (history.state?.sheet || history.state?.detail) history.back();
+        else void CapApp.exitApp();
+      });
+      removeBack = () => void h.remove();
+    });
     setOnline(navigator.onLine);
     const on = () => setOnline(navigator.onLine);
     window.addEventListener("online", on);
     window.addEventListener("offline", on);
     registerPWA();
-    return () => { window.removeEventListener("online", on); window.removeEventListener("offline", on); };
+    return () => { offErr(); removeBack?.(); window.removeEventListener("online", on); window.removeEventListener("offline", on); };
   }, []);
 
   useEffect(() => { document.documentElement.classList.toggle("dark", db.settings.dark); }, [db.settings.dark]);
