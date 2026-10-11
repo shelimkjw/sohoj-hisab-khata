@@ -164,11 +164,9 @@ export function CustomerDetail({ id, onBack, open }: { id: string; onBack: () =>
           <div className="text-xs">{bal > 0 ? "আমি পাবো" : bal < 0 ? "গ্রাহক পাবে" : "হিসাব পরিশোধিত"}</div>
           <div className="text-2xl font-bold">{taka(Math.abs(bal))}</div>
         </div>
-        <div className="no-print mt-3 grid grid-cols-2 gap-2">
-          <button className="btn bg-danger text-primary-foreground" onClick={() => open({ kind: "tx", type: "credit", customerId: id })}>বাকি দিলাম</button>
-          <button className="btn bg-success text-primary-foreground" onClick={() => open({ kind: "tx", type: "received", customerId: id })}>টাকা পেলাম</button>
-          <button className="btn border bg-card" onClick={() => open({ kind: "tx", type: "owed", customerId: id })}>গ্রাহকের পাওনা</button>
-          <button className="btn border bg-card" onClick={() => open({ kind: "tx", type: "paid", customerId: id })}>টাকা দিলাম</button>
+        <div className="no-print mt-3 grid grid-cols-2 gap-3">
+          <button className="btn py-4 text-xl bg-danger text-primary-foreground" onClick={() => open({ kind: "tx", type: "credit", customerId: id })}>দিলাম</button>
+          <button className="btn py-4 text-xl bg-success text-primary-foreground" onClick={() => open({ kind: "tx", type: "received", customerId: id })}>পেলাম</button>
         </div>
       </div>
       <div className="rounded-xl border bg-card p-3">
@@ -182,8 +180,8 @@ export function CustomerDetail({ id, onBack, open }: { id: string; onBack: () =>
         <div className="flex justify-between border-b py-2 text-sm text-muted-foreground"><span>শুরুর ব্যালেন্স</span><span>{taka(c.openingBalance)}</span></div>
         {[...rows].reverse().map(({ tx, before, after }) => (
           <button key={tx.id} onClick={() => open({ kind: "tx", tx })} className="w-full border-b py-2 text-left text-sm last:border-0">
-            <div className="flex justify-between"><span className="font-semibold">{TX_LABEL[tx.type]}</span><span className={`font-bold ${toneOf(tx.type)}`}>{taka(tx.amount)}</span></div>
-            <div className="flex justify-between text-xs text-muted-foreground"><span>{bnDate(tx.date)}{tx.description ? ` · ${tx.description}` : ""}</span><span>{taka(before)} → {taka(after)}</span></div>
+            <div className="flex justify-between gap-2"><span className="text-base font-semibold">{tx.description || TX_LABEL[tx.type]}</span><span className={`font-bold ${toneOf(tx.type)}`}>{taka(tx.amount)}</span></div>
+            <div className="flex justify-between text-xs text-muted-foreground"><span>{TX_LABEL[tx.type]} · {bnDate(tx.date)}</span><span>{taka(before)} → {taka(after)}</span></div>
           </button>
         ))}
         {rows.length === 0 && <p className="py-4 text-center text-sm text-muted-foreground">কোনো লেনদেন নেই</p>}
