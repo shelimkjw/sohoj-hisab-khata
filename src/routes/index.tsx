@@ -54,7 +54,7 @@ function App() {
   const db = useDB();
   const [ready, setReady] = useState(false);
   const [unlocked, setUnlocked] = useState(false);
-  const [tab, setTab] = useState("home");
+  const [tab, setTab] = useState("customers");
   const [customerId, setCustomerId] = useState<string | null>(null);
   const [txOpen, setTxOpen] = useState<null | { type?: TxType | undefined; customerId?: string | undefined; tx?: Tx | undefined; key: number }>(null);
   const [custOpen, setCustOpen] = useState(false);
