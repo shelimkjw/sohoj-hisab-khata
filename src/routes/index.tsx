@@ -74,8 +74,8 @@ function App() {
   // Android back button: leave customer detail
   useEffect(() => {
     if (!customerId) return;
-    history.pushState({ detail: true }, "");
-    const onPop = (e: PopStateEvent) => { if (!e.state?.sheet) setCustomerId(null); };
+    if (!history.state?.detail) history.pushState({ detail: true }, "");
+    const onPop = (e: PopStateEvent) => { if (!e.state?.sheet && !e.state?.detail) setCustomerId(null); };
     window.addEventListener("popstate", onPop);
     return () => window.removeEventListener("popstate", onPop);
   }, [customerId]);

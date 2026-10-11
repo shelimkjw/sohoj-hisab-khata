@@ -1,16 +1,21 @@
-import { useEffect, type ReactNode } from "react";
+import { useEffect, useRef, type ReactNode } from "react";
 import { X } from "lucide-react";
 
 export function Sheet({ open, onClose, title, children }: { open: boolean; onClose: () => void; title: string; children: ReactNode }) {
   // Android back button closes the sheet
+  const active = useRef(false);
   useEffect(() => {
     if (!open) return;
-    history.pushState({ sheet: true }, "");
+    active.current = true;
+    if (!history.state?.sheet) history.pushState({ sheet: true }, "");
     const onPop = () => onClose();
     window.addEventListener("popstate", onPop);
     return () => {
       window.removeEventListener("popstate", onPop);
-      if (history.state?.sheet) history.back();
+      active.current = false;
+      setTimeout(() => {
+        if (!active.current && history.state?.sheet) history.back();
+      }, 0);
     };
   }, [open]); // eslint-disable-line react-hooks/exhaustive-deps
   if (!open) return null;
