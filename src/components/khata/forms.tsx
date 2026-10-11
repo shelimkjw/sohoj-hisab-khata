@@ -12,7 +12,7 @@ const toLocalInput = (ms: number) => {
   return d.toISOString().slice(0, 16);
 };
 
-export function CustomerForm({ open, onClose, customer, onSaved }: { open: boolean; onClose: () => void; customer?: Customer; onSaved?: (id: string) => void }) {
+export function CustomerForm({ open, onClose, customer, onSaved }: { open: boolean; onClose: () => void; customer?: Customer | undefined; onSaved?: (id: string) => void }) {
   const [f, setF] = useState(() => ({
     name: customer?.name ?? "",
     phone: customer?.phone ?? "",
@@ -66,7 +66,7 @@ export function CustomerForm({ open, onClose, customer, onSaved }: { open: boole
   );
 }
 
-export function TxForm({ open, onClose, tx, presetType, presetCustomer }: { open: boolean; onClose: () => void; tx?: Tx; presetType?: TxType; presetCustomer?: string }) {
+export function TxForm({ open, onClose, tx, presetType, presetCustomer }: { open: boolean; onClose: () => void; tx?: Tx | undefined; presetType?: TxType | undefined; presetCustomer?: string | undefined }) {
   const db = useDB();
   const customers = activeCustomers(db).sort((a, b) => a.name.localeCompare(b.name, "bn"));
   const [type, setType] = useState<TxType>(tx?.type ?? presetType ?? "credit");

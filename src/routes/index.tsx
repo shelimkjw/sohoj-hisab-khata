@@ -55,7 +55,7 @@ function App() {
   const [unlocked, setUnlocked] = useState(false);
   const [tab, setTab] = useState("home");
   const [customerId, setCustomerId] = useState<string | null>(null);
-  const [txOpen, setTxOpen] = useState<null | { type?: TxType; customerId?: string; tx?: Tx; key: number }>(null);
+  const [txOpen, setTxOpen] = useState<null | { type?: TxType | undefined; customerId?: string | undefined; tx?: Tx | undefined; key: number }>(null);
   const [custOpen, setCustOpen] = useState(false);
   const [online, setOnline] = useState(true);
 
