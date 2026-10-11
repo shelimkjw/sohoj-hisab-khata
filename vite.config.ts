@@ -13,7 +13,7 @@ export default defineConfig({
     // nitro/vite builds from this
     server: { entry: "server" },
     // Android build (CAPACITOR=1): emit a static single-page shell the phone can load with no server.
-    ...(process.env.CAPACITOR ? { spa: { enabled: true } } : {}),
+    ...(process.env['CAPACITOR'] ? { spa: { enabled: true } } : {}),
   },
   vite: {
     plugins: [

@@ -37,10 +37,10 @@ export async function openSqlite(): Promise<Conn> {
   await c.open();
   await c.execute(`CREATE TABLE IF NOT EXISTS meta (key TEXT PRIMARY KEY NOT NULL, value TEXT NOT NULL);`);
   const row = (await c.query(`SELECT value FROM meta WHERE key='schema_version'`)).values?.[0];
-  let v = row ? Number(row.value) : 0;
+  let v = row ? Number(row['value']) : 0;
   while (v < SCHEMA_VERSION) {
     v++;
-    const set = MIGRATIONS[v].map((statement) => ({ statement, values: [] as unknown[] }));
+    const set = (MIGRATIONS[v] ?? []).map((statement) => ({ statement, values: [] as unknown[] }));
     set.push({ statement: `INSERT OR REPLACE INTO meta (key, value) VALUES ('schema_version', ?)`, values: [String(v)] });
     await c.executeSet(set, true);
   }
@@ -51,12 +51,12 @@ export async function openSqlite(): Promise<Conn> {
 export async function loadAll(): Promise<Partial<DB> | null> {
   const c = await openSqlite();
   const rows = async (sql: string) => (await c.query(sql)).values ?? [];
-  const customers = (await rows(`SELECT data FROM customers`)).map((r) => JSON.parse(String(r.data)) as Customer);
-  const txs = (await rows(`SELECT data FROM txs`)).map((r) => JSON.parse(String(r.data)) as Tx);
-  const audit = (await rows(`SELECT data FROM audit ORDER BY at`)).map((r) => JSON.parse(String(r.data)) as AuditEntry);
+  const customers = (await rows(`SELECT data FROM customers`)).map((r) => JSON.parse(String(r['data'])) as Customer);
+  const txs = (await rows(`SELECT data FROM txs`)).map((r) => JSON.parse(String(r['data'])) as Tx);
+  const audit = (await rows(`SELECT data FROM audit ORDER BY at`)).map((r) => JSON.parse(String(r['data'])) as AuditEntry);
   const s = (await rows(`SELECT value FROM settings WHERE key='app'`))[0];
   if (!customers.length && !txs.length && !s) return null;
-  return { customers, txs, audit, ...(s ? { settings: JSON.parse(String(s.value)) as Settings } : {}) };
+  return { customers, txs, audit, ...(s ? { settings: JSON.parse(String(s['value'])) as Settings } : {}) };
 }
 
 /** Writes only rows whose object identity changed, inside one SQL transaction. */
