@@ -77,6 +77,8 @@ export function TxForm({ open, onClose, tx, presetType, presetCustomer }: { open
   const [reference, setReference] = useState(tx?.reference ?? "");
   const [busy, setBusy] = useState(false);
   const needsCustomer = CUSTOMER_TYPES.includes(type);
+  const simple = !tx && !!presetCustomer;
+  const custName = db.customers.find((c) => c.id === customerId)?.name;
   const amt = Number(amount.replace(/[০-৯]/g, (d) => String("০১২৩৪৫৬৭৮৯".indexOf(d))));
 
   const submit = () => {
@@ -101,8 +103,8 @@ export function TxForm({ open, onClose, tx, presetType, presetCustomer }: { open
   const types: TxType[] = ["credit", "received", "owed", "paid", "income", "expense"];
   const tone = (t: TxType) => (t === "received" || t === "income" || t === "owed" ? "success" : "danger");
   return (
-    <Sheet open={open} onClose={onClose} title={tx ? "লেনদেন সংশোধন" : "নতুন লেনদেন"}>
-      <div className="grid grid-cols-3 gap-2">
+    <Sheet open={open} onClose={onClose} title={tx ? "লেনদেন সংশোধন" : simple ? `${custName ?? ""} — ${type === "credit" ? "দিলাম" : "পেলাম"}` : "নতুন লেনদেন"}>
+      {!simple && <div className="grid grid-cols-3 gap-2">
         {types.map((t) => (
           <button
             key={t}
@@ -112,8 +114,8 @@ export function TxForm({ open, onClose, tx, presetType, presetCustomer }: { open
             {TX_LABEL[t]}
           </button>
         ))}
-      </div>
-      {needsCustomer && (
+      </div>}
+      {needsCustomer && !simple && (
         <>
           <Label>গ্রাহক *</Label>
           <select className="field" value={customerId} onChange={(e) => setCustomerId(e.target.value)}>
@@ -128,12 +130,12 @@ export function TxForm({ open, onClose, tx, presetType, presetCustomer }: { open
       )}
       <Label>টাকার পরিমাণ (৳) *</Label>
       <input className="field text-2xl font-bold" inputMode="decimal" value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="০" />
+      <Label>বিবরণ</Label>
+      <input className="field text-lg" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="যেমন: চাল ১০ কেজি" />
       <Label>তারিখ ও সময়</Label>
       <input type="datetime-local" className="field" value={date} onChange={(e) => setDate(e.target.value)} />
-      <Label>বিবরণ</Label>
-      <input className="field" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="যেমন: চাল ১০ কেজি" />
-      <Label>রেফারেন্স নম্বর</Label>
-      <input className="field" value={reference} onChange={(e) => setReference(e.target.value)} />
+      {!simple && <><Label>রেফারেন্স নম্বর</Label>
+      <input className="field" value={reference} onChange={(e) => setReference(e.target.value)} /></>}
       <button className="btn mt-5 w-full bg-primary text-primary-foreground" disabled={busy} onClick={submit}>সংরক্ষণ করুন</button>
       {tx && (
         <button
