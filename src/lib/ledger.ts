@@ -352,6 +352,24 @@ export function downloadFile(name: string, content: string, mime: string) {
 }
 
 export async function shareOrDownload(name: string, content: string, mime: string) {
+  if (native) {
+    // Android app: save to the Documents folder, then open Android's share sheet
+    const { Filesystem, Directory, Encoding } = await import("@capacitor/filesystem");
+    const { Share } = await import("@capacitor/share");
+    await Filesystem.writeFile({ path: name, data: content, directory: Directory.Cache, encoding: Encoding.UTF8 });
+    try {
+      await Filesystem.writeFile({ path: "TaliKhata/" + name, data: content, directory: Directory.Documents, encoding: Encoding.UTF8, recursive: true });
+    } catch {
+      /* Documents may be unavailable; cache copy is still shared */
+    }
+    const { uri } = await Filesystem.getUri({ path: name, directory: Directory.Cache });
+    try {
+      await Share.share({ title: name, url: uri, dialogTitle: name });
+    } catch {
+      /* user closed share sheet */
+    }
+    return;
+  }
   const file = new File([content], name, { type: mime });
   const nav = navigator as Navigator & { canShare?: (d: unknown) => boolean };
   if (nav.canShare?.({ files: [file] })) {
