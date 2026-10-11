@@ -19,7 +19,7 @@ describe("ledger arithmetic", () => {
     expect(customerBalance(getDB(), id)).toBe(900);
 
     const rows = customerLedger(getDB(), id);
-    deleteTx(rows[1].tx.id); // reverse the ৳300 payment
+    deleteTx(rows[1]!.tx.id); // reverse the ৳300 payment
     expect(customerBalance(getDB(), id)).toBe(1200);
 
     const before = getDB().txs.length;
