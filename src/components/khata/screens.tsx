@@ -2,11 +2,11 @@ import { useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { ArrowDownLeft, ArrowUpRight, BarChart3, Pencil, Phone, Plus, Printer, Search, Share2, Trash2, UserPlus, Wallet } from "lucide-react";
 import {
-  TX_LABEL, activeCustomers, activeTxs, bnDate, bnDay, cashEffect, customerBalance, customerLedger, deleteCustomer, deleteTx,
+  TX_LABEL, activeCustomers, activeTxs, bnDate, bnDay, cashEffect, customerBalance, customerLedger, deleteCustomer,
   exportBackup, parseBackup, restoreBackup, setPin, setSettings, shareOrDownload, startOfDay, taka, toCSV, useDB,
   type DB, type Tx, type TxType,
 } from "@/lib/ledger";
-import { CustomerForm, TxForm } from "./forms";
+import { CustomerForm } from "./forms";
 import { Label, Stat } from "./ui";
 
 export type Open = (o: { kind: "tx"; type?: TxType; customerId?: string; tx?: Tx } | { kind: "customer" } | { kind: "tab"; tab: string }) => void;

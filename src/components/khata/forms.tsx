@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { toast } from "sonner";
 import {
-  CUSTOMER_TYPES, TX_LABEL, activeCustomers, customerBalance, isLikelyDuplicate, saveCustomer, saveTx, taka, useDB,
+  CUSTOMER_TYPES, TX_LABEL, activeCustomers, customerBalance, deleteTx, isLikelyDuplicate, saveCustomer, saveTx, taka, useDB,
   type Customer, type Tx, type TxType,
 } from "@/lib/ledger";
 import { Label, Sheet } from "./ui";
@@ -135,6 +135,19 @@ export function TxForm({ open, onClose, tx, presetType, presetCustomer }: { open
       <Label>রেফারেন্স নম্বর</Label>
       <input className="field" value={reference} onChange={(e) => setReference(e.target.value)} />
       <button className="btn mt-5 w-full bg-primary text-primary-foreground" disabled={busy} onClick={submit}>সংরক্ষণ করুন</button>
+      {tx && (
+        <button
+          className="btn mt-2 w-full border text-danger"
+          onClick={() => {
+            if (!confirm("এই লেনদেনটি মুছে ফেলবেন? ব্যালেন্স আবার হিসাব হবে।")) return;
+            deleteTx(tx.id);
+            toast.success("মুছে ফেলা হয়েছে");
+            onClose();
+          }}
+        >
+          লেনদেন মুছুন
+        </button>
+      )}
     </Sheet>
   );
 }
