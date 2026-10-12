@@ -4,6 +4,8 @@ import { ArrowLeft, BookOpen, Home as HomeIcon, ListOrdered, Lock, Plus, Setting
 import { Toaster } from "@/components/ui/sonner";
 import { toast } from "sonner";
 import { checkPin, initStorage, onStorageError, useDB, type Tx, type TxType } from "@/lib/ledger";
+import { isActivated } from "@/lib/activation";
+import { ActivationScreen } from "@/components/khata/activation";
 import { registerPWA } from "@/lib/pwa";
 import { CustomerForm, TxForm } from "@/components/khata/forms";
 import { CustomerDetail, Customers, Home, Reports, Settings, Transactions, type Open } from "@/components/khata/screens";
@@ -11,9 +13,9 @@ import { CustomerDetail, Customers, Home, Reports, Settings, Transactions, type 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "তালি খাতা — অফলাইন বাকির খাতা" },
-      { name: "description", content: "তালি খাতা: গ্রাহকের বাকি, টাকা পাওয়া-দেওয়া, আয়-খরচ — সব ফোনেই, ইন্টারনেট ছাড়া।" },
-      { property: "og:title", content: "তালি খাতা — অফলাইন বাকির খাতা" },
+      { title: "সহজ হিসাব খাতা — অফলাইন বাকির খাতা" },
+      { name: "description", content: "সহজ হিসাব খাতা: গ্রাহকের বাকি, টাকা পাওয়া-দেওয়া, আয়-খরচ — সব ফোনেই, ইন্টারনেট ছাড়া।" },
+      { property: "og:title", content: "সহজ হিসাব খাতা — অফলাইন বাকির খাতা" },
       { property: "og:description", content: "সহজ বাংলা হিসাব খাতা, সম্পূর্ণ অফলাইন।" },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
@@ -59,6 +61,7 @@ function App() {
   const [txOpen, setTxOpen] = useState<null | { type?: TxType | undefined; customerId?: string | undefined; tx?: Tx | undefined; key: number }>(null);
   const [custOpen, setCustOpen] = useState(false);
   const [online, setOnline] = useState(true);
+  const [activated, setActivated] = useState(false);
 
   useEffect(() => {
     initStorage()
@@ -75,6 +78,7 @@ function App() {
       });
       removeBack = () => void h.remove();
     });
+    setActivated(isActivated());
     setOnline(navigator.onLine);
     const on = () => setOnline(navigator.onLine);
     window.addEventListener("online", on);
@@ -101,6 +105,7 @@ function App() {
   };
 
   if (!ready) return <div className="min-h-screen bg-background" />;
+  if (!activated) return <><ActivationScreen onDone={() => setActivated(true)} /><Toaster position="top-center" /></>;
   if (db.settings.pinHash && !unlocked) return <PinLock onOk={() => setUnlocked(true)} />;
 
   const title = customerId ? "গ্রাহকের খাতা" : TABS.find((t) => t.id === tab)?.label;
@@ -113,7 +118,7 @@ function App() {
           <BookOpen className="h-5 w-5" />
         )}
         <div className="flex-1">
-          <div className="text-lg font-bold leading-tight">{customerId ? title : "তালি খাতা"}</div>
+          <div className="text-lg font-bold leading-tight">{customerId ? title : "সহজ হিসাব খাতা"}</div>
           {!customerId && <div className="text-xs opacity-80">{db.settings.shopName} · {title}</div>}
         </div>
         <span className="flex items-center gap-1 rounded-full bg-primary-foreground/15 px-2 py-0.5 text-xs">

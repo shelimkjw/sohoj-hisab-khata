@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">Tali Khata</string>
-    <string name="title_activity_main">Tali Khata</string>
+    <string name="app_name">Sohoj Hisab Khata</string>
+    <string name="title_activity_main">Sohoj Hisab Khata</string>
     <string name="package_name">com.talikhata.app</string>
     <string name="custom_url_scheme">com.talikhata.app</string>
 </resources>

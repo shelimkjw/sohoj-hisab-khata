@@ -301,7 +301,7 @@ export function parseBackup(text: string): DB {
   const j = JSON.parse(text);
   const data = j?.data;
   if (j?.app !== "tali-khata" || !Array.isArray(data?.customers) || !Array.isArray(data?.txs))
-    throw new Error("এটি সঠিক তালি খাতা ব্যাকআপ ফাইল নয়");
+    throw new Error("এটি সঠিক সহজ হিসাব খাতা ব্যাকআপ ফাইল নয়");
   for (const c of data.customers) if (typeof c.id !== "string" || typeof c.name !== "string") throw new Error("গ্রাহকের তথ্য ভুল");
   for (const t of data.txs)
     if (typeof t.id !== "string" || !(t.type in TX_LABEL) || typeof t.amount !== "number") throw new Error("লেনদেনের তথ্য ভুল");
