@@ -38,7 +38,7 @@ export function ActivationScreen({ onDone }: { onDone: () => void }) {
           <button className="mt-1 inline-flex items-center gap-1 text-sm text-primary" onClick={() => copy(code)}><Copy className="h-4 w-4" /> কোড কপি করুন</button>
         </div>
       </div>
-      <a href={wa} target="_blank" rel="noreferrer" className="btn flex items-center justify-center gap-2 bg-success text-success-foreground"><MessageCircle className="h-5 w-5" /> WhatsApp-এ বার্তা পাঠান</a>
+      <a href={wa} target="_blank" rel="noreferrer" className="btn flex items-center justify-center gap-2 bg-success text-primary-foreground"><MessageCircle className="h-5 w-5" /> WhatsApp-এ বার্তা পাঠান</a>
       <a href={`tel:${OWNER_PHONE}`} className="btn flex items-center justify-center gap-2 border bg-card"><Phone className="h-5 w-5" /> কল করুন ({OWNER_PHONE})</a>
       <div className="rounded-2xl border bg-card p-4">
         <label className="text-sm font-medium">সক্রিয়করণ কোড দিন</label>
