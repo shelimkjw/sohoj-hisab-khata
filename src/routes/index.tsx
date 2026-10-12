@@ -11,9 +11,9 @@ import { CustomerDetail, Customers, Home, Reports, Settings, Transactions, type 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "তালি খাতা — অফলাইন বাকির খাতা" },
-      { name: "description", content: "তালি খাতা: গ্রাহকের বাকি, টাকা পাওয়া-দেওয়া, আয়-খরচ — সব ফোনেই, ইন্টারনেট ছাড়া।" },
-      { property: "og:title", content: "তালি খাতা — অফলাইন বাকির খাতা" },
+      { title: "সহজ হিসাব খাতা — অফলাইন বাকির খাতা" },
+      { name: "description", content: "সহজ হিসাব খাতা: গ্রাহকের বাকি, টাকা পাওয়া-দেওয়া, আয়-খরচ — সব ফোনেই, ইন্টারনেট ছাড়া।" },
+      { property: "og:title", content: "সহজ হিসাব খাতা — অফলাইন বাকির খাতা" },
       { property: "og:description", content: "সহজ বাংলা হিসাব খাতা, সম্পূর্ণ অফলাইন।" },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
@@ -113,7 +113,7 @@ function App() {
           <BookOpen className="h-5 w-5" />
         )}
         <div className="flex-1">
-          <div className="text-lg font-bold leading-tight">{customerId ? title : "তালি খাতা"}</div>
+          <div className="text-lg font-bold leading-tight">{customerId ? title : "সহজ হিসাব খাতা"}</div>
           {!customerId && <div className="text-xs opacity-80">{db.settings.shopName} · {title}</div>}
         </div>
         <span className="flex items-center gap-1 rounded-full bg-primary-foreground/15 px-2 py-0.5 text-xs">

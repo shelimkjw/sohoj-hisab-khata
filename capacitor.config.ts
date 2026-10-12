@@ -2,7 +2,7 @@ import type { CapacitorConfig } from "@capacitor/cli";
 
 const config: CapacitorConfig = {
   appId: "com.talikhata.app",
-  appName: "Tali Khata",
+  appName: "Sohoj Hisab Khata",
   webDir: "www",
   android: { allowMixedContent: false },
   plugins: {

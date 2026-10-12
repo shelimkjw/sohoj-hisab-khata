@@ -361,7 +361,7 @@ export function Settings() {
           <li>একবার খোলার পর ইন্টারনেট ছাড়াই চলবে</li>
         </ol>
       </div>
-      <p className="pb-2 text-center text-xs text-muted-foreground"><Plus className="inline h-3 w-3" /> তালি খাতা · সংস্করণ ১.০</p>
+      <p className="pb-2 text-center text-xs text-muted-foreground"><Plus className="inline h-3 w-3" /> সহজ হিসাব খাতা · সংস্করণ ১.০</p>
     </div>
   );
 }
