@@ -14,13 +14,34 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      cloud_backups: {
+        Row: {
+          data: Json
+          recovery_key: string
+          updated_at: string
+        }
+        Insert: {
+          data: Json
+          recovery_key: string
+          updated_at?: string
+        }
+        Update: {
+          data?: Json
+          recovery_key?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_cloud_backup: { Args: { p_key: string }; Returns: Json }
+      save_cloud_backup: {
+        Args: { p_data: Json; p_key: string }
+        Returns: string
+      }
     }
     Enums: {
       [_ in never]: never
