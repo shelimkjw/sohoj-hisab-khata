@@ -4,6 +4,8 @@ import { ArrowLeft, BookOpen, Home as HomeIcon, ListOrdered, Lock, Plus, Setting
 import { Toaster } from "@/components/ui/sonner";
 import { toast } from "sonner";
 import { checkPin, initStorage, onStorageError, useDB, type Tx, type TxType } from "@/lib/ledger";
+import { isActivated } from "@/lib/activation";
+import { ActivationScreen } from "@/components/khata/activation";
 import { registerPWA } from "@/lib/pwa";
 import { CustomerForm, TxForm } from "@/components/khata/forms";
 import { CustomerDetail, Customers, Home, Reports, Settings, Transactions, type Open } from "@/components/khata/screens";
@@ -59,6 +61,7 @@ function App() {
   const [txOpen, setTxOpen] = useState<null | { type?: TxType | undefined; customerId?: string | undefined; tx?: Tx | undefined; key: number }>(null);
   const [custOpen, setCustOpen] = useState(false);
   const [online, setOnline] = useState(true);
+  const [activated, setActivated] = useState(false);
 
   useEffect(() => {
     initStorage()
@@ -75,6 +78,7 @@ function App() {
       });
       removeBack = () => void h.remove();
     });
+    setActivated(isActivated());
     setOnline(navigator.onLine);
     const on = () => setOnline(navigator.onLine);
     window.addEventListener("online", on);
@@ -101,6 +105,7 @@ function App() {
   };
 
   if (!ready) return <div className="min-h-screen bg-background" />;
+  if (!activated) return <><ActivationScreen onDone={() => setActivated(true)} /><Toaster position="top-center" /></>;
   if (db.settings.pinHash && !unlocked) return <PinLock onOk={() => setUnlocked(true)} />;
 
   const title = customerId ? "গ্রাহকের খাতা" : TABS.find((t) => t.id === tab)?.label;
