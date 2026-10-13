@@ -68,6 +68,8 @@ function App() {
       .catch(() => toast.error("ডাটাবেস খোলা যায়নি — অ্যাপ আবার চালু করুন"))
       .finally(() => setReady(true));
     const offErr = onStorageError((m) => toast.error(m));
+    let offSync: (() => void) | undefined;
+    void import("@/lib/cloud-backup").then((m) => { offSync = m.startAutoSync(); });
     let removeBack: (() => void) | undefined;
     void import("@capacitor/core").then(async ({ Capacitor }) => {
       if (!Capacitor.isNativePlatform()) return;
