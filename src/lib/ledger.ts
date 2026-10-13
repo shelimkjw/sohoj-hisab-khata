@@ -340,6 +340,19 @@ export const taka = (n: number) => (n < 0 ? "-" : "") + "৳" + nf.format(Math.a
 export const bnDate = (ms: number) =>
   new Date(ms).toLocaleString("bn-BD", { day: "numeric", month: "short", year: "numeric", hour: "numeric", minute: "2-digit" });
 export const bnDay = (ms: number) => new Date(ms).toLocaleDateString("bn-BD", { day: "numeric", month: "short", year: "numeric" });
+const bnNum = (n: number) => String(n).replace(/\d/g, (d) => "০১২৩৪৫৬৭৮৯".charAt(Number(d)));
+export function bnTimeAgo(ms: number, now = Date.now()) {
+  const s = Math.max(0, Math.floor((now - ms) / 1000));
+  if (s < 60) return "এইমাত্র";
+  const m = Math.floor(s / 60);
+  if (m < 60) return `${bnNum(m)} মিনিট আগে`;
+  const h = Math.floor(m / 60);
+  if (h < 24) return `${bnNum(h)} ঘণ্টা আগে`;
+  const d = Math.floor(h / 24);
+  if (d < 30) return `${bnNum(d)} দিন আগে`;
+  if (d < 365) return `${bnNum(Math.floor(d / 30))} মাস আগে`;
+  return `${bnNum(Math.floor(d / 365))} বছর আগে`;
+}
 
 export function startOfDay(ms = Date.now()) {
   const d = new Date(ms);
