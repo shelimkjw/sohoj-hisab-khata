@@ -1,4 +1,4 @@
-name: Build Android APK
+name: Build APK
 
 on:
   push:
@@ -6,14 +6,17 @@ on:
   workflow_dispatch:
 
 jobs:
-  build-apk:
+  apk:
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+
+      - name: Setup Node.js 22
         uses: actions/setup-node@v4
         with:
           node-version: 22
@@ -24,34 +27,63 @@ jobs:
           distribution: temurin
           java-version: 21
 
+      - name: Configure Android SDK
+        run: |
+          echo "ANDROID_HOME=$ANDROID_HOME"
+          test -d "$ANDROID_HOME" || { echo "::error::Android SDK not found"; exit 1; }
+          echo "sdk.dir=$ANDROID_HOME" > android/local.properties
+
       - name: Install dependencies
-        run: npm install
+        run: bun install --frozen-lockfile || bun install
+
+      - name: Run ledger tests
+        run: bunx vitest run src/test/ledger.test.ts
 
       - name: Build web app
-        run: npm run build
+        run: CAPACITOR=1 bun run build
 
-      - name: Add Android platform (if missing)
+      - name: Prepare www folder
         run: |
-          if [ ! -d "android" ]; then
-            npx cap add android
-          fi
+          set -e
+          SHELL_HTML=$(find dist .output -name "_shell.html" -o -name "index.html" 2>/dev/null | grep -v node_modules | head -1)
+          if [ -z "$SHELL_HTML" ]; then echo "::error::No HTML entry found in build output"; find dist .output -maxdepth 3 | head -50; exit 1; fi
+          CLIENT_DIR=$(dirname "$SHELL_HTML")
+          echo "Using $CLIENT_DIR"
+          rm -rf www && mkdir www
+          cp -r "$CLIENT_DIR"/. www/
+          cp "$SHELL_HTML" www/index.html
+          ls -la www
+
+      - name: Generate Android icons and splash
+        run: >
+          npx --yes @capacitor/assets@3 generate --android
+          --iconBackgroundColor '#1f6b45'
+          --splashBackgroundColor '#1f6b45'
+          --iconBackgroundColorDark '#1f6b45'
+          --splashBackgroundColorDark '#1f6b45'
 
       - name: Sync Capacitor
         run: npx cap sync android
 
-      - name: Build APK
+      - name: Build debug APK
         working-directory: android
+        env:
+          VERSION_CODE: ${{ github.run_number }}
         run: |
           chmod +x gradlew
-          ./gradlew assembleDebug
+          ./gradlew assembleDebug --stacktrace
 
       - name: Rename APK
         run: |
+          APK=android/app/build/outputs/apk/debug/app-debug.apk
+          test -s "$APK" || { echo "::error::Debug APK was not produced"; exit 1; }
           mkdir -p output
-          cp android/app/build/outputs/apk/debug/app-debug.apk output/sohoj-Hisab-khata.apk
+          cp "$APK" output/sohoj-hisab-khata.apk
+          ls -la output
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: sohoj-Hisab-khata
-          path: output/sohoj-Hisab-khata.apk
+          name: sohoj-hisab-khata
+          path: output/sohoj-hisab-khata.apk
+          if-no-files-found: error
