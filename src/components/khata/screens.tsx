@@ -116,12 +116,12 @@ export function Customers({ onSelect, open }: { onSelect: (id: string) => void; 
             <button className="btn mx-auto mt-3 flex bg-primary text-primary-foreground" onClick={() => open({ kind: "customer" })}><UserPlus className="h-4 w-4" />গ্রাহক যোগ করুন</button>
           </div>
         )}
-        {list.map(({ c, b }) => (
+        {list.map(({ c, b, at }) => (
           <button key={c.id} onClick={() => onSelect(c.id)} className="flex w-full items-center gap-3 border-b px-3 py-3 text-left last:border-0">
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-secondary font-bold text-secondary-foreground">{c.name.slice(0, 1)}</div>
             <div className="min-w-0 flex-1">
               <div className="truncate font-semibold">{c.name}</div>
-              <div className="truncate text-xs text-muted-foreground">{c.phone || c.address || "—"}</div>
+              <div className="truncate text-xs text-muted-foreground">{bnTimeAgo(at)}</div>
             </div>
             <div className="text-right">
               <div className={`font-bold ${b > 0 ? "text-danger" : b < 0 ? "text-success" : "text-muted-foreground"}`}>{taka(Math.abs(b))}</div>
