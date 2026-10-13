@@ -86,7 +86,7 @@ function App() {
     window.addEventListener("online", on);
     window.addEventListener("offline", on);
     registerPWA();
-    return () => { offErr(); removeBack?.(); window.removeEventListener("online", on); window.removeEventListener("offline", on); };
+    return () => { offErr(); offSync?.(); removeBack?.(); window.removeEventListener("online", on); window.removeEventListener("offline", on); };
   }, []);
 
   useEffect(() => { document.documentElement.classList.toggle("dark", db.settings.dark); }, [db.settings.dark]);

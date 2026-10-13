@@ -343,6 +343,7 @@ export function Settings() {
         <input ref={fileRef} type="file" accept="application/json,.json" hidden onChange={(e) => onFile(e.target.files?.[0])} />
         <p className="mt-3 text-xs text-muted-foreground">সব তথ্য শুধু এই ফোনে থাকে, কোনো সার্ভারে যায় না। অ্যাপ মুছে ফেললে বা ব্রাউজারের ডাটা ক্লিয়ার করলে তথ্য হারিয়ে যাবে — নিয়মিত ব্যাকআপ নিয়ে ফাইলটি Google Drive / WhatsApp এ রেখে দিন।</p>
       </div>
+      <CloudRecovery />
       <div className="rounded-xl border bg-card p-4">
         <h3 className="font-bold">পিন লক</h3>
         <p className="text-sm text-muted-foreground">{db.settings.pinHash ? "পিন চালু আছে" : "পিন বন্ধ"}</p>
