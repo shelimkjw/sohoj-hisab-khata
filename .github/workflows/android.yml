@@ -5,9 +5,14 @@ on:
     branches: [main]
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   apk:
     runs-on: ubuntu-latest
+    env:
+      KEYSTORE_B64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
     steps:
       - uses: actions/checkout@v4
 
@@ -58,21 +63,21 @@ jobs:
           VERSION_CODE: ${{ github.run_number }}
         run: chmod +x gradlew && ./gradlew assembleDebug --stacktrace
 
-      - name: Verify debug APK exists
+      - name: Verify and rename debug APK
         run: |
           APK=android/app/build/outputs/apk/debug/app-debug.apk
           test -s "$APK" || { echo "::error::Debug APK was not produced"; exit 1; }
-          ls -la "$APK"
+          mv "$APK" android/app/build/outputs/apk/debug/sohoj-hisab-khata-debug.apk
+          ls -la android/app/build/outputs/apk/debug/
 
       - uses: actions/upload-artifact@v4
         with:
-          name: tali-khata-debug-apk
-          path: android/app/build/outputs/apk/debug/app-debug.apk
+          name: sohoj-hisab-khata-debug-apk
+          path: android/app/build/outputs/apk/debug/sohoj-hisab-khata-debug.apk
 
       - name: Build signed release APK (only if signing secrets are set)
         if: ${{ env.KEYSTORE_B64 != '' }}
         env:
-          KEYSTORE_B64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
           ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
           ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
           ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
@@ -83,9 +88,19 @@ jobs:
           export ANDROID_KEYSTORE_PATH="$RUNNER_TEMP/release.jks"
           ./gradlew assembleRelease --stacktrace
           test -s app/build/outputs/apk/release/app-release.apk
+          mv app/build/outputs/apk/release/app-release.apk app/build/outputs/apk/release/sohoj-hisab-khata.apk
 
       - uses: actions/upload-artifact@v4
-        if: ${{ hashFiles('android/app/build/outputs/apk/release/app-release.apk') != '' }}
+        if: ${{ hashFiles('android/app/build/outputs/apk/release/sohoj-hisab-khata.apk') != '' }}
         with:
-          name: tali-khata-release-apk
-          path: android/app/build/outputs/apk/release/app-release.apk
+          name: sohoj-hisab-khata-release-apk
+          path: android/app/build/outputs/apk/release/sohoj-hisab-khata.apk
+
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ github.run_number }}
+          name: সহজ হিসাব খাতা v${{ github.run_number }}
+          files: |
+            android/app/build/outputs/apk/debug/sohoj-hisab-khata-debug.apk
+            android/app/build/outputs/apk/release/sohoj-hisab-khata.apk
