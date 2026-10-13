@@ -7,6 +7,7 @@ import {
   type DB, type Tx, type TxType,
 } from "@/lib/ledger";
 import { CustomerForm } from "./forms";
+import { getRecovery, recoverFrom, setupRecovery, stopRecovery, uploadNow, validInputs } from "@/lib/cloud-backup";
 import { Label, Stat } from "./ui";
 
 export type Open = (o: { kind: "tx"; type?: TxType; customerId?: string; tx?: Tx } | { kind: "customer" } | { kind: "tab"; tab: string }) => void;
@@ -341,7 +342,7 @@ export function Settings() {
           <button className="btn border" onClick={() => fileRef.current?.click()}>রিস্টোর করুন</button>
         </div>
         <input ref={fileRef} type="file" accept="application/json,.json" hidden onChange={(e) => onFile(e.target.files?.[0])} />
-        <p className="mt-3 text-xs text-muted-foreground">সব তথ্য শুধু এই ফোনে থাকে, কোনো সার্ভারে যায় না। অ্যাপ মুছে ফেললে বা ব্রাউজারের ডাটা ক্লিয়ার করলে তথ্য হারিয়ে যাবে — নিয়মিত ব্যাকআপ নিয়ে ফাইলটি Google Drive / WhatsApp এ রেখে দিন।</p>
+        <p className="mt-3 text-xs text-muted-foreground">ফাইল ব্যাকআপ শুধু এই ফোনে থাকে। অ্যাপ মুছে ফেললে বা ব্রাউজারের ডাটা ক্লিয়ার করলে তথ্য হারিয়ে যাবে — নিয়মিত ব্যাকআপ নিয়ে ফাইলটি Google Drive / WhatsApp এ রেখে দিন।</p>
       </div>
       <CloudRecovery />
       <div className="rounded-xl border bg-card p-4">
@@ -363,6 +364,53 @@ export function Settings() {
         </ol>
       </div>
       <p className="pb-2 text-center text-xs text-muted-foreground"><Plus className="inline h-3 w-3" /> সহজ হিসাব খাতা · সংস্করণ ১.০</p>
+    </div>
+  );
+}
+
+function CloudRecovery() {
+  const [rec, setRec] = useState(() => (typeof window === "undefined" ? null : getRecovery()));
+  const [phone, setPhone] = useState("");
+  const [nid, setNid] = useState("");
+  const [busy, setBusy] = useState(false);
+  const run = async (fn: () => Promise<unknown>, ok: string) => {
+    if (!validInputs(phone, nid)) return void toast.error("সঠিক ১১ সংখ্যার মোবাইল নম্বর ও NID নম্বর দিন");
+    setBusy(true);
+    try { await fn(); toast.success(ok); setRec(getRecovery()); setNid(""); }
+    catch (e) { toast.error((e as Error).message); }
+    finally { setBusy(false); }
+  };
+  return (
+    <div className="rounded-xl border bg-card p-4">
+      <h3 className="font-bold">অনলাইন ব্যাকআপ (মোবাইল + NID)</h3>
+      {rec ? (
+        <>
+          <p className="mt-1 text-sm text-success">চালু আছে — {rec.phone}</p>
+          <p className="text-xs text-muted-foreground">
+            {rec.lastSync ? `শেষ আপলোড: ${bnDate(rec.lastSync)}` : "এখনো আপলোড হয়নি"} · ইন্টারনেট পেলে নিজে থেকেই আপলোড হয়
+          </p>
+          <div className="mt-3 grid grid-cols-2 gap-2">
+            <button className="btn bg-primary text-primary-foreground" disabled={busy}
+              onClick={async () => { setBusy(true); try { await uploadNow(); setRec(getRecovery()); toast.success("আপলোড হয়েছে"); } catch (e) { toast.error((e as Error).message); } finally { setBusy(false); } }}>
+              এখনই আপলোড
+            </button>
+            <button className="btn border text-danger" onClick={() => confirm("অনলাইন ব্যাকআপ বন্ধ করবেন?") && (stopRecovery(), setRec(null))}>বন্ধ করুন</button>
+          </div>
+        </>
+      ) : (
+        <p className="mt-1 text-sm text-muted-foreground">অ্যাপ মুছে গেলে বা নতুন ফোনে, একই নম্বর ও NID দিয়ে সব হিসাব ফিরে পাবেন।</p>
+      )}
+      <div className="mt-3 space-y-2">
+        <input className="field" inputMode="tel" placeholder="মোবাইল নম্বর (01XXXXXXXXX)" value={phone} onChange={(e) => setPhone(e.target.value)} />
+        <input className="field" inputMode="numeric" type="password" placeholder="NID নম্বর" value={nid} onChange={(e) => setNid(e.target.value)} />
+        <div className="grid grid-cols-2 gap-2">
+          {!rec && (
+            <button className="btn bg-primary text-primary-foreground" disabled={busy} onClick={() => run(() => setupRecovery(phone, nid), "অনলাইন ব্যাকআপ চালু হয়েছে")}>ব্যাকআপ চালু করুন</button>
+          )}
+          <button className={`btn border ${rec ? "col-span-2" : ""}`} disabled={busy} onClick={() => run(() => recoverFrom(phone, nid), "আগের সব হিসাব ফিরে এসেছে")}>আগের তথ্য নিয়ে আসুন</button>
+        </div>
+      </div>
+      <p className="mt-2 text-xs text-muted-foreground">নম্বর ও NID মনে রাখুন — এগুলোই আপনার হিসাবের চাবি। NID কাউকে দেবেন না। ইন্টারনেট লাগবে শুধু আপলোড ও ফেরত আনার সময়।</p>
     </div>
   );
 }
