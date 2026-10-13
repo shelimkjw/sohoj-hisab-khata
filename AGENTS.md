@@ -10,7 +10,7 @@
 <!-- LOVABLE:END -->
 
 ## Architecture rules
-- All ledger data lives on-device in `src/lib/ledger.ts` (localStorage, no backend) — the app must work fully offline and never send financial data anywhere.
+- All ledger data lives on-device in `src/lib/ledger.ts` (no backend needed to work) — app must work fully offline; the only network use is the opt-in mobile+NID cloud backup in `src/lib/cloud-backup.ts`, reachable solely via security-definer RPCs keyed by a SHA-256 hash, so the table is never directly readable.
 - Customer balances are always derived from opening balance + non-deleted transactions — never store a separate balance, so ledger and balance can't drift.
 - Deletes are soft (`deletedAt`) with an audit entry — preserves a trail and lets backups merge by ID without duplicates.
 - The app is a single route with in-page tabs — so every screen is available offline after the first visit.

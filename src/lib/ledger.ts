@@ -157,6 +157,11 @@ function commit(next: DB) {
   }
 }
 
+export function subscribeDB(cb: () => void) {
+  listeners.add(cb);
+  return () => void listeners.delete(cb);
+}
+
 export function getDB() {
   load();
   return db;
