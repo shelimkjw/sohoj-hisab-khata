@@ -4,8 +4,8 @@ import { ArrowLeft, BookOpen, Home as HomeIcon, ListOrdered, Lock, Plus, Setting
 import { Toaster } from "@/components/ui/sonner";
 import { toast } from "sonner";
 import { checkPin, initStorage, onStorageError, useDB, type Tx, type TxType } from "@/lib/ledger";
-import { isActivated } from "@/lib/activation";
-import { ActivationScreen } from "@/components/khata/activation";
+import { canTransact, refreshLicense } from "@/lib/license";
+import { AdminPanel, Paywall, UpdatePopup } from "@/components/khata/activation";
 import { registerPWA } from "@/lib/pwa";
 import { CustomerForm, TxForm } from "@/components/khata/forms";
 import { CustomerDetail, Customers, Home, Reports, Settings, Transactions, type Open } from "@/components/khata/screens";
@@ -61,7 +61,9 @@ function App() {
   const [txOpen, setTxOpen] = useState<null | { type?: TxType | undefined; customerId?: string | undefined; tx?: Tx | undefined; key: number }>(null);
   const [custOpen, setCustOpen] = useState(false);
   const [online, setOnline] = useState(true);
-  const [activated, setActivated] = useState(false);
+  const [paywall, setPaywall] = useState<null | (() => void)>(null);
+  const [admin, setAdmin] = useState(false);
+  const [taps, setTaps] = useState(0);
 
   useEffect(() => {
     initStorage()
@@ -80,7 +82,7 @@ function App() {
       });
       removeBack = () => void h.remove();
     });
-    setActivated(isActivated());
+    void refreshLicense();
     setOnline(navigator.onLine);
     const on = () => setOnline(navigator.onLine);
     window.addEventListener("online", on);
@@ -101,13 +103,15 @@ function App() {
   }, [customerId]);
 
   const open: Open = (o) => {
-    if (o.kind === "tx") setTxOpen({ type: o.type, customerId: o.customerId, tx: o.tx, key: Date.now() });
+    if (o.kind === "tx") {
+      const go = () => setTxOpen({ type: o.type, customerId: o.customerId, tx: o.tx, key: Date.now() });
+      if (!o.tx && !canTransact()) setPaywall(() => go); else go();
+    }
     else if (o.kind === "customer") setCustOpen(true);
     else { setTab(o.tab); setCustomerId(null); }
   };
 
   if (!ready) return <div className="min-h-screen bg-background" />;
-  if (!activated) return <><ActivationScreen onDone={() => setActivated(true)} /><Toaster position="top-center" /></>;
   if (db.settings.pinHash && !unlocked) return <PinLock onOk={() => setUnlocked(true)} />;
 
   const title = customerId ? "গ্রাহকের খাতা" : TABS.find((t) => t.id === tab)?.label;
@@ -117,7 +121,7 @@ function App() {
         {customerId ? (
           <button aria-label="ফিরে যান" onClick={() => history.back()}><ArrowLeft className="h-5 w-5" /></button>
         ) : (
-          <BookOpen className="h-5 w-5" />
+          <button aria-label="লোগো" onClick={() => { const n = taps + 1; setTaps(n); if (n >= 3) { setTaps(0); setAdmin(true); } }}><BookOpen className="h-5 w-5" /></button>
         )}
         <div className="flex-1">
           <div className="text-lg font-bold leading-tight">{customerId ? title : "সহজ হিসাব খাতা"}</div>
@@ -129,6 +133,9 @@ function App() {
         </span>
       </header>
 
+      <UpdatePopup />
+      {admin && <AdminPanel onClose={() => setAdmin(false)} />}
+      {paywall && <Paywall onClose={() => setPaywall(null)} onUnlocked={() => { const go = paywall; setPaywall(null); go(); }} />}
       <main className="p-4">
         {customerId ? <CustomerDetail id={customerId} onBack={() => history.back()} open={open} />
           : tab === "home" ? <Home open={open} />

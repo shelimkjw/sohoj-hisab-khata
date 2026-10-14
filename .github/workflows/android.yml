@@ -40,7 +40,7 @@ jobs:
         run: bunx vitest run src/test/ledger.test.ts
 
       - name: Build web app
-        run: CAPACITOR=1 bun run build
+        run: CAPACITOR=1 VITE_APP_VERSION=${{ github.run_number }} bun run build
 
       - name: Prepare www folder
         run: |
