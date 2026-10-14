@@ -17,3 +17,5 @@
 - Service worker is registered only via `src/lib/pwa.ts` — keeps it out of the editor preview.
 - Android app is Capacitor (`capacitor.config.ts`, committed `android/` project); in the app, SQLite (`src/lib/sqlite-store.ts`) is the source of truth with append-only migrations — real on-device database that survives restarts and updates.
 - APKs are built only by `.github/workflows/android.yml` using `CAPACITOR=1` (TanStack SPA shell → `www/`) — the editor can't run the Android SDK; release signing comes solely from GitHub secrets.
+- Subscription (30-day trial, paid plans, owner approval) lives in `src/lib/license.ts`; approvals go through master-key-checked security-definer RPCs and are cached on-device — so transactions stay gated offline without a user login.
+- Update popup compares the build's `VITE_APP_VERSION` (CI run number) with the release the owner publishes from the admin panel — no update UI shows unless a newer release exists.
