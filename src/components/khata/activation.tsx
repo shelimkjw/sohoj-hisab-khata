@@ -35,8 +35,8 @@ export function Paywall({ onClose, onUnlocked }: { onClose: () => void; onUnlock
 
   const submit = async () => {
     const p = payer.replace(/\D/g, "");
-    if (!/^01\d{9}$/.test(p)) return toast.error("সঠিক ১১ সংখ্যার নম্বর দিন");
-    if (trx.trim().length < 6) return toast.error("সঠিক TrxID দিন");
+    if (!/^01\d{9}$/.test(p)) { toast.error("সঠিক ১১ সংখ্যার নম্বর দিন"); return; }
+    if (trx.trim().length < 6) { toast.error("সঠিক TrxID দিন"); return; }
     setBusy(true);
     try {
       await submitPayment(plan, p, trx);
@@ -101,7 +101,7 @@ export function AdminPanel({ onClose }: { onClose: () => void }) {
     const r = await getRelease(); if (r) setRel(r);
   };
   const login = async () => {
-    if (!(await isMaster(pass))) return toast.error("ভুল মাস্টার কি");
+    if (!(await isMaster(pass))) { toast.error("ভুল মাস্টার কি"); return; }
     setKey(pass.trim()); setOwnerDevice(); void load(pass.trim());
   };
   const decide = async (r: Req, ok: boolean) => {

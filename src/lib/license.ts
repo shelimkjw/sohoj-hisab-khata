@@ -92,7 +92,7 @@ export async function adminDecide(key: string, id: string, approve: boolean, rea
 }
 
 // ---- App updates ----
-export const APP_VERSION = Number(import.meta.env.VITE_APP_VERSION || 0);
+export const APP_VERSION = Number(import.meta.env["VITE_APP_VERSION"] || 0);
 export type Release = { version_code: number; apk_url: string; notes: string; force: boolean };
 export async function getRelease(): Promise<Release | null> {
   const { data, error } = await rpc("get_app_release");
