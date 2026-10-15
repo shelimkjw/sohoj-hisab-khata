@@ -9,6 +9,7 @@ import {
 import { CustomerForm } from "./forms";
 import { getRecovery, recoverFrom, setupRecovery, stopRecovery, uploadNow, validInputs } from "@/lib/cloud-backup";
 import { Label, Stat } from "./ui";
+import { setAutoMsg, useAutoMsg } from "@/lib/auto-message";
 
 export type Open = (o: { kind: "tx"; type?: TxType; customerId?: string; tx?: Tx } | { kind: "customer" } | { kind: "tab"; tab: string }) => void;
 
@@ -140,6 +141,7 @@ export function CustomerDetail({ id, onBack, open }: { id: string; onBack: () =>
   const c = db.customers.find((x) => x.id === id);
   if (!c || c.deletedAt) return <p className="p-6 text-center">গ্রাহক পাওয়া যায়নি</p>;
   const bal = customerBalance(db, id);
+  const autoMsg = useAutoMsg();
   const rows = customerLedger(db, id);
   const share = () => {
     const lines = [`${db.settings.shopName} — ${c.name} এর খাতা`, `শুরুর ব্যালেন্স: ${taka(c.openingBalance)}`, ...rows.map((r) => `${bnDay(r.tx.date)} ${TX_LABEL[r.tx.type]} ${taka(r.tx.amount)} → ${taka(r.after)}`), `বর্তমান ব্যালেন্স: ${taka(bal)} ${bal > 0 ? "(বাকি)" : bal < 0 ? "(আপনার পাওনা)" : ""}`];
@@ -178,7 +180,17 @@ export function CustomerDetail({ id, onBack, open }: { id: string; onBack: () =>
       <div className="rounded-xl border bg-card p-3">
         <div className="mb-2 flex items-center justify-between">
           <h3 className="font-bold">খাতা</h3>
-          <div className="no-print flex gap-2">
+          <div className="no-print flex flex-wrap justify-end gap-2">
+            <button
+              role="switch"
+              aria-checked={autoMsg}
+              aria-label="মেসেজ পাঠান"
+              className={`btn border px-2 py-1 text-sm ${autoMsg ? "border-success bg-success-soft text-success" : "bg-muted text-muted-foreground"}`}
+              onClick={() => { setAutoMsg(!autoMsg); toast.success(!autoMsg ? "মেসেজ পাঠান চালু" : "মেসেজ পাঠান বন্ধ"); }}
+            >
+              <span className={`inline-block h-2.5 w-2.5 rounded-full ${autoMsg ? "bg-success" : "bg-muted-foreground"}`} />
+              {autoMsg ? "মেসেজ: চালু" : "মেসেজ: বন্ধ"}
+            </button>
             <button className="btn border px-2 py-1 text-sm" onClick={share}><Share2 className="h-4 w-4" />শেয়ার</button>
             <button className="btn border px-2 py-1 text-sm" onClick={() => window.print()}><Printer className="h-4 w-4" />প্রিন্ট</button>
           </div>
