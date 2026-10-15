@@ -5,6 +5,7 @@ import {
   type Customer, type Tx, type TxType,
 } from "@/lib/ledger";
 import { Label, Sheet } from "./ui";
+import { sendTxMessage, useAutoMsg, waNumber } from "@/lib/auto-message";
 
 const toLocalInput = (ms: number) => {
   const d = new Date(ms);
@@ -79,6 +80,8 @@ export function TxForm({ open, onClose, tx, presetType, presetCustomer }: { open
   const needsCustomer = CUSTOMER_TYPES.includes(type);
   const simple = !tx && !!presetCustomer;
   const custName = db.customers.find((c) => c.id === customerId)?.name;
+  const autoMsg = useAutoMsg();
+  const hasWa = !!waNumber(db.customers.find((c) => c.id === customerId)?.phone ?? "");
   const amt = Number(amount.replace(/[০-৯]/g, (d) => String("০১২৩৪৫৬৭৮৯".indexOf(d))));
 
   const submit = () => {
@@ -90,8 +93,10 @@ export function TxForm({ open, onClose, tx, presetType, presetCustomer }: { open
     if (!tx && isLikelyDuplicate({ customerId: cid, type, amount: amt }) && !confirm("একই লেনদেন এইমাত্র যোগ হয়েছে। আবার যোগ করবেন?")) return;
     setBusy(true);
     try {
-      saveTx({ id: tx?.id, type, customerId: cid, amount: amt, date: new Date(date).getTime() || Date.now(), description: description.trim(), reference: reference.trim() });
+      const when = new Date(date).getTime() || Date.now();
+      saveTx({ id: tx?.id, type, customerId: cid, amount: amt, date: when, description: description.trim(), reference: reference.trim() });
       toast.success("লেনদেন সংরক্ষিত");
+      if (!tx && cid && autoMsg) sendTxMessage(cid, { type, amount: amt, description: description.trim(), date: when });
       onClose();
     } catch (e) {
       toast.error((e as Error).message || "সংরক্ষণ ব্যর্থ");
@@ -136,6 +141,11 @@ export function TxForm({ open, onClose, tx, presetType, presetCustomer }: { open
       <input type="datetime-local" className="field" value={date} onChange={(e) => setDate(e.target.value)} />
       {!simple && <><Label>রেফারেন্স নম্বর</Label>
       <input className="field" value={reference} onChange={(e) => setReference(e.target.value)} /></>}
+      {!tx && needsCustomer && customerId && autoMsg && (
+        <p className={`mt-3 text-xs ${hasWa ? "text-success" : "text-muted-foreground"}`}>
+          {hasWa ? "📲 সংরক্ষণ করলেই WhatsApp-এ মেসেজ তৈরি হবে" : "⚠️ গ্রাহকের ফোন নম্বর নেই — মেসেজ যাবে না"}
+        </p>
+      )}
       <button className="btn mt-5 w-full bg-primary text-primary-foreground" disabled={busy} onClick={submit}>সংরক্ষণ করুন</button>
       {tx && (
         <button
