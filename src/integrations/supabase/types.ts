@@ -14,6 +14,33 @@ export type Database = {
   }
   public: {
     Tables: {
+      app_release: {
+        Row: {
+          apk_url: string
+          force: boolean
+          id: number
+          notes: string
+          updated_at: string
+          version_code: number
+        }
+        Insert: {
+          apk_url?: string
+          force?: boolean
+          id?: number
+          notes?: string
+          updated_at?: string
+          version_code?: number
+        }
+        Update: {
+          apk_url?: string
+          force?: boolean
+          id?: number
+          notes?: string
+          updated_at?: string
+          version_code?: number
+        }
+        Relationships: []
+      }
       cloud_backups: {
         Row: {
           data: Json
@@ -32,15 +59,90 @@ export type Database = {
         }
         Relationships: []
       }
+      license_requests: {
+        Row: {
+          created_at: string
+          decided_at: string | null
+          device_code: string
+          device_token: string
+          expires_at: string | null
+          id: string
+          payer: string
+          plan: string
+          reason: string | null
+          status: string
+          trx_id: string
+        }
+        Insert: {
+          created_at?: string
+          decided_at?: string | null
+          device_code: string
+          device_token: string
+          expires_at?: string | null
+          id?: string
+          payer: string
+          plan: string
+          reason?: string | null
+          status?: string
+          trx_id: string
+        }
+        Update: {
+          created_at?: string
+          decided_at?: string | null
+          device_code?: string
+          device_token?: string
+          expires_at?: string | null
+          id?: string
+          payer?: string
+          plan?: string
+          reason?: string | null
+          status?: string
+          trx_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
+      _shk_is_admin: { Args: { p_key: string }; Returns: boolean }
+      admin_decide: {
+        Args: {
+          p_approve: boolean
+          p_id: string
+          p_key: string
+          p_reason: string
+        }
+        Returns: undefined
+      }
+      admin_list_requests: { Args: { p_key: string }; Returns: Json }
+      admin_set_release: {
+        Args: {
+          p_force: boolean
+          p_key: string
+          p_notes: string
+          p_url: string
+          p_version: number
+        }
+        Returns: undefined
+      }
+      get_app_release: { Args: never; Returns: Json }
       get_cloud_backup: { Args: { p_key: string }; Returns: Json }
+      get_license: { Args: { p_token: string }; Returns: Json }
       save_cloud_backup: {
         Args: { p_data: Json; p_key: string }
         Returns: string
+      }
+      submit_license_request: {
+        Args: {
+          p_code: string
+          p_payer: string
+          p_plan: string
+          p_token: string
+          p_trx: string
+        }
+        Returns: undefined
       }
     }
     Enums: {
