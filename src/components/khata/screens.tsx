@@ -138,10 +138,10 @@ export function Customers({ onSelect, open }: { onSelect: (id: string) => void; 
 export function CustomerDetail({ id, onBack, open }: { id: string; onBack: () => void; open: Open }) {
   const db = useDB();
   const [edit, setEdit] = useState(false);
+  const autoMsg = useAutoMsg();
   const c = db.customers.find((x) => x.id === id);
   if (!c || c.deletedAt) return <p className="p-6 text-center">গ্রাহক পাওয়া যায়নি</p>;
   const bal = customerBalance(db, id);
-  const autoMsg = useAutoMsg();
   const rows = customerLedger(db, id);
   const share = () => {
     const lines = [`${db.settings.shopName} — ${c.name} এর খাতা`, `শুরুর ব্যালেন্স: ${taka(c.openingBalance)}`, ...rows.map((r) => `${bnDay(r.tx.date)} ${TX_LABEL[r.tx.type]} ${taka(r.tx.amount)} → ${taka(r.after)}`), `বর্তমান ব্যালেন্স: ${taka(bal)} ${bal > 0 ? "(বাকি)" : bal < 0 ? "(আপনার পাওনা)" : ""}`];
