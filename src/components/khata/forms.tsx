@@ -80,7 +80,7 @@ export function TxForm({ open, onClose, tx, presetType, presetCustomer }: { open
   const needsCustomer = CUSTOMER_TYPES.includes(type);
   const simple = !tx && !!presetCustomer;
   const custName = db.customers.find((c) => c.id === customerId)?.name;
-  const autoMsg = useAutoMsg();
+  const autoMsg = useAutoMsg(customerId);
   const hasWa = !!waNumber(db.customers.find((c) => c.id === customerId)?.phone ?? "");
   const amt = Number(amount.replace(/[০-৯]/g, (d) => String("০১২৩৪৫৬৭৮৯".indexOf(d))));
 

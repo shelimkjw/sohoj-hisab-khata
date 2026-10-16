@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { ArrowLeft, BookOpen, Home as HomeIcon, ListOrdered, Lock, Plus, Settings as Cog, Users, BarChart3, Wifi, WifiOff } from "lucide-react";
+import { ArrowLeft, BookOpen, ListOrdered, Lock, Plus, Settings as Cog, Users, BarChart3, Wifi, WifiOff } from "lucide-react";
 import { Toaster } from "@/components/ui/sonner";
 import { toast } from "sonner";
 import { checkPin, initStorage, onStorageError, useDB, type Tx, type TxType } from "@/lib/ledger";
@@ -8,7 +8,7 @@ import { canTransact, refreshLicense } from "@/lib/license";
 import { AdminPanel, Paywall, UpdatePopup } from "@/components/khata/activation";
 import { registerPWA } from "@/lib/pwa";
 import { CustomerForm, TxForm } from "@/components/khata/forms";
-import { CustomerDetail, Customers, Home, Reports, Settings, Transactions, type Open } from "@/components/khata/screens";
+import { BackupReminder, CustomerDetail, Customers, Reports, Settings, Transactions, type Open } from "@/components/khata/screens";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -25,7 +25,6 @@ export const Route = createFileRoute("/")({
 });
 
 const TABS = [
-  { id: "home", label: "হোম", icon: HomeIcon },
   { id: "customers", label: "গ্রাহক", icon: Users },
   { id: "transactions", label: "লেনদেন", icon: ListOrdered },
   { id: "reports", label: "রিপোর্ট", icon: BarChart3 },
@@ -134,18 +133,18 @@ function App() {
       </header>
 
       <UpdatePopup />
+      {!customerId && <BackupReminder open={open} />}
       {admin && <AdminPanel onClose={() => setAdmin(false)} />}
       {paywall && <Paywall onClose={() => setPaywall(null)} onUnlocked={() => { const go = paywall; setPaywall(null); go(); }} />}
       <main className="p-4">
         {customerId ? <CustomerDetail id={customerId} onBack={() => history.back()} open={open} />
-          : tab === "home" ? <Home open={open} />
           : tab === "customers" ? <Customers onSelect={setCustomerId} open={open} />
           : tab === "transactions" ? <Transactions open={open} />
           : tab === "reports" ? <Reports />
           : <Settings />}
       </main>
 
-      {!customerId && (tab === "customers" || tab === "home" || tab === "transactions") && (
+      {!customerId && (tab === "customers" || tab === "transactions") && (
         <button aria-label="যোগ করুন" onClick={() => (tab === "customers" ? setCustOpen(true) : open({ kind: "tx" }))}
           className="no-print fixed bottom-20 right-4 z-30 flex h-14 w-14 items-center justify-center rounded-full bg-accent text-accent-foreground shadow-lg">
           <Plus className="h-7 w-7" />
@@ -153,7 +152,7 @@ function App() {
       )}
 
       <nav className="no-print fixed bottom-0 left-0 right-0 z-30 border-t bg-card">
-        <div className="mx-auto grid max-w-lg grid-cols-5">
+        <div className="mx-auto grid max-w-lg grid-cols-4">
           {TABS.map((t) => {
             const active = !customerId && tab === t.id;
             return (
