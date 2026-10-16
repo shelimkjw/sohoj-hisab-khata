@@ -30,65 +30,8 @@ function TxRow({ t, db, onEdit }: { t: Tx; db: DB; onEdit?: () => void }) {
   );
 }
 
-// ---------------- Home ----------------
-export function Home({ open }: { open: Open }) {
-  const db = useDB();
-  const s = useMemo(() => {
-    const cs = activeCustomers(db);
-    let recv = 0, pay = 0;
-    for (const c of cs) {
-      const b = customerBalance(db, c.id);
-      if (b > 0) recv += b; else pay -= b;
-    }
-    const today = startOfDay();
-    const tx = activeTxs(db);
-    const sum = (types: TxType[], from = today) => tx.filter((t) => t.date >= from && types.includes(t.type)).reduce((a, t) => a + t.amount, 0);
-    const cash = tx.reduce((a, t) => a + cashEffect(t.type, t.amount), 0);
-    const todayNet = tx.filter((t) => t.date >= today).reduce((a, t) => a + cashEffect(t.type, t.amount), 0);
-    return { count: cs.length, recv, pay, inToday: sum(["received"]), outToday: sum(["paid"]), incToday: sum(["income"]), expToday: sum(["expense"]), cash, todayNet, recent: [...tx].sort((a, b) => b.date - a.date).slice(0, 8) };
-  }, [db]);
-
-  const quick = [
-    { label: "গ্রাহক যোগ", icon: UserPlus, on: () => open({ kind: "customer" }) },
-    { label: "টাকা পেলাম", icon: ArrowDownLeft, on: () => open({ kind: "tx", type: "received" }) },
-    { label: "বাকি দিলাম", icon: ArrowUpRight, on: () => open({ kind: "tx", type: "credit" }) },
-    { label: "খরচ", icon: Wallet, on: () => open({ kind: "tx", type: "expense" }) },
-    { label: "রিপোর্ট", icon: BarChart3, on: () => open({ kind: "tab", tab: "reports" }) },
-  ];
-  return (
-    <div className="space-y-4">
-      <div className="grid grid-cols-2 gap-3">
-        <Stat label="মোট পাবো (গ্রাহকের কাছে)" value={taka(s.recv)} tone="danger" />
-        <Stat label="মোট দেবো (গ্রাহককে)" value={taka(s.pay)} tone="success" />
-        <Stat label="হাতে নগদ" value={taka(s.cash)} tone={s.cash >= 0 ? "success" : "danger"} />
-        <Stat label="মোট গ্রাহক" value={s.count.toLocaleString("bn-BD")} />
-      </div>
-      <div className="flex justify-between overflow-x-auto gap-2">
-        {quick.map((q) => (
-          <button key={q.label} onClick={q.on} className="flex min-w-16 flex-1 flex-col items-center gap-1 rounded-xl bg-card border p-2 text-xs font-medium">
-            <q.icon className="h-5 w-5 text-primary" />{q.label}
-          </button>
-        ))}
-      </div>
-      <div className="rounded-xl border bg-card p-3">
-        <h3 className="mb-2 font-bold">আজকের হিসাব</h3>
-        <div className="grid grid-cols-2 gap-y-2 text-sm">
-          <span>টাকা পেলাম</span><span className="text-right font-semibold text-success">{taka(s.inToday)}</span>
-          <span>টাকা দিলাম</span><span className="text-right font-semibold text-danger">{taka(s.outToday)}</span>
-          <span>আয়</span><span className="text-right font-semibold text-success">{taka(s.incToday)}</span>
-          <span>খরচ</span><span className="text-right font-semibold text-danger">{taka(s.expToday)}</span>
-          <span className="border-t pt-2 font-bold">নিট নগদ</span><span className={`border-t pt-2 text-right font-bold ${s.todayNet >= 0 ? "text-success" : "text-danger"}`}>{taka(s.todayNet)}</span>
-        </div>
-      </div>
-      <div className="rounded-xl border bg-card p-3">
-        <h3 className="mb-1 font-bold">সাম্প্রতিক লেনদেন</h3>
-        {s.recent.length === 0 ? <p className="py-6 text-center text-sm text-muted-foreground">এখনো কোনো লেনদেন নেই</p> : s.recent.map((t) => <TxRow key={t.id} t={t} db={db} onEdit={() => open({ kind: "tx", tx: t })} />)}
-      </div>
-    </div>
-  );
-}
-
 // ---------------- Customers ----------------
+
 export function Customers({ onSelect, open }: { onSelect: (id: string) => void; open: Open }) {
   const db = useDB();
   const [q, setQ] = useState("");
@@ -104,8 +47,23 @@ export function Customers({ onSelect, open }: { onSelect: (id: string) => void; 
       .map((c) => ({ c, b: customerBalance(db, c.id), at: Math.max(c.updatedAt, last.get(c.id) ?? 0) }))
       .sort((a, b) => b.at - a.at);
   }, [db, q]);
+  const stats = useMemo(() => {
+    let recv = 0, pay = 0;
+    const cs = activeCustomers(db);
+    for (const c of cs) {
+      const b = customerBalance(db, c.id);
+      if (b > 0) recv += b; else pay -= b;
+    }
+    return { recv, pay, cash: recv - pay, count: cs.length };
+  }, [db]);
   return (
     <div className="space-y-3">
+      <div className="grid grid-cols-2 gap-3">
+        <Stat label="মোট পাবো (গ্রাহকের কাছে)" value={taka(stats.recv)} />
+        <Stat label="মোট দেবো (গ্রাহককে)" value={taka(stats.pay)} />
+        <Stat label="হাতে নগদ (পাবো − দেবো)" value={taka(stats.cash)} />
+        <Stat label="মোট গ্রাহক" value={stats.count.toLocaleString("bn-BD")} />
+      </div>
       <div className="relative">
         <Search className="absolute left-3 top-3 h-5 w-5 text-muted-foreground" />
         <input className="field pl-10" placeholder="নাম বা ফোন দিয়ে খুঁজুন" value={q} onChange={(e) => setQ(e.target.value)} />
@@ -138,7 +96,7 @@ export function Customers({ onSelect, open }: { onSelect: (id: string) => void; 
 export function CustomerDetail({ id, onBack, open }: { id: string; onBack: () => void; open: Open }) {
   const db = useDB();
   const [edit, setEdit] = useState(false);
-  const autoMsg = useAutoMsg();
+  const autoMsg = useAutoMsg(id);
   const c = db.customers.find((x) => x.id === id);
   if (!c || c.deletedAt) return <p className="p-6 text-center">গ্রাহক পাওয়া যায়নি</p>;
   const bal = customerBalance(db, id);
@@ -186,7 +144,7 @@ export function CustomerDetail({ id, onBack, open }: { id: string; onBack: () =>
               aria-checked={autoMsg}
               aria-label="মেসেজ পাঠান"
               className={`btn border px-2 py-1 text-sm ${autoMsg ? "border-success bg-success-soft text-success" : "bg-muted text-muted-foreground"}`}
-              onClick={() => { setAutoMsg(!autoMsg); toast.success(!autoMsg ? "মেসেজ পাঠান চালু" : "মেসেজ পাঠান বন্ধ"); }}
+              onClick={() => { setAutoMsg(id, !autoMsg); toast.success(!autoMsg ? "এই গ্রাহকের জন্য মেসেজ চালু" : "এই গ্রাহকের জন্য মেসেজ বন্ধ"); }}
             >
               <span className={`inline-block h-2.5 w-2.5 rounded-full ${autoMsg ? "bg-success" : "bg-muted-foreground"}`} />
               {autoMsg ? "মেসেজ: চালু" : "মেসেজ: বন্ধ"}
