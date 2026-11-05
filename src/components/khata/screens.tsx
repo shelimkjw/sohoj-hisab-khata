@@ -59,9 +59,9 @@ export function Customers({ onSelect, open }: { onSelect: (id: string) => void; 
   return (
     <div className="space-y-3">
       <div className="grid grid-cols-2 gap-3">
-        <Stat label="মোট পাবো (গ্রাহকের কাছে)" value={taka(stats.recv)} />
-        <Stat label="মোট দেবো (গ্রাহককে)" value={taka(stats.pay)} />
-        <Stat label="হাতে নগদ (পাবো − দেবো)" value={taka(stats.cash)} />
+        <Stat label="মোট পাবো (গ্রাহকের কাছে)" value={taka(stats.recv)} tint="danger" />
+        <Stat label="মোট দেবো (গ্রাহককে)" value={taka(stats.pay)} tint="success" />
+        <Stat label="হাতে নগদ (পাবো − দেবো)" value={taka(stats.cash)} tint="primary" />
         <Stat label="মোট গ্রাহক" value={stats.count.toLocaleString("bn-BD")} />
       </div>
       <div className="relative">
