@@ -343,21 +343,57 @@ function CloudRecovery() {
   const [phone, setPhone] = useState("");
   const [nid, setNid] = useState("");
   const [busy, setBusy] = useState(false);
-  const run = async (fn: () => Promise<unknown>, ok: string) => {
+  const [otp, setOtp] = useState<{ code: string; phone: string; nid: string } | null>(null);
+  const [codeIn, setCodeIn] = useState("");
+
+  const sendOtp = () => {
+    if (!validInputs(phone, nid)) return void toast.error("সঠিক ১১ সংখ্যার মোবাইল নম্বর ও NID নম্বর দিন");
+    const p = normPhone(phone);
+    const wa = waNumber(p);
+    if (!wa) return void toast.error("মোবাইল নম্বর সঠিক নয়");
+    const code = String(Math.floor(1000 + Math.random() * 9000));
+    const bnCode = code.replace(/\d/g, (d) => "০১২৩৪৫৬৭৮৯".charAt(Number(d)));
+    window.open(`https://wa.me/${wa}?text=${encodeURIComponent(`সহজ হিসাব খাতা — আপনার ব্যাকআপ যাচাই কোড: ${bnCode}`)}`, "_blank");
+    setOtp({ code, phone: p, nid });
+    setCodeIn("");
+    toast.success("আপনার WhatsApp-এ যাচাই কোড পাঠানো হয়েছে");
+  };
+
+  const confirmOtp = async () => {
+    if (!otp) return;
+    const given = codeIn.replace(/[০-৯]/g, (c) => String("০১২৩৪৫৬৭৮৯".indexOf(c)));
+    if (given !== otp.code) return void toast.error("কোড মেলেনি — আবার দেখুন");
+    setBusy(true);
+    try {
+      await setupRecovery(otp.phone, otp.nid);
+      toast.success("যাচাই সম্পন্ন — অনলাইন ব্যাকআপ চালু হয়েছে");
+      setRec(getRecovery());
+      setOtp(null);
+      setNid("");
+      setCodeIn("");
+    } catch (e) {
+      toast.error((e as Error).message);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const recover = async () => {
     if (!validInputs(phone, nid)) return void toast.error("সঠিক ১১ সংখ্যার মোবাইল নম্বর ও NID নম্বর দিন");
     setBusy(true);
-    try { await fn(); toast.success(ok); setRec(getRecovery()); setNid(""); }
+    try { await recoverFrom(phone, nid); toast.success("আগের সব হিসাব ফিরে এসেছে"); setRec(getRecovery()); setNid(""); }
     catch (e) { toast.error((e as Error).message); }
     finally { setBusy(false); }
   };
+
   return (
     <div className="rounded-xl border bg-card p-4">
       <h3 className="font-bold">অনলাইন ব্যাকআপ (মোবাইল + NID)</h3>
       {rec ? (
         <>
-          <p className="mt-1 text-sm text-success">চালু আছে — {rec.phone}</p>
+          <p className="mt-1 text-sm text-success">চালু আছে — যাচাইকৃত নম্বর: {rec.phone}</p>
           <p className="text-xs text-muted-foreground">
-            {rec.lastSync ? `শেষ আপলোড: ${bnDate(rec.lastSync)}` : "এখনো আপলোড হয়নি"} · ইন্টারনেট পেলে নিজে থেকেই আপলোড হয়
+            {rec.lastSync ? `শেষ আপলোড: ${bnDate(rec.lastSync)}` : "এখনো আপলোড হয়নি"} · ইন্টারনেট পেলে নিজে থেকেই আপলোড হয় · গ্রাহকের রসিদে এই নম্বরটি যোগাযোগ হিসেবে যায়
           </p>
           <div className="mt-3 grid grid-cols-2 gap-2">
             <button className="btn bg-primary text-primary-foreground" disabled={busy}
@@ -371,16 +407,62 @@ function CloudRecovery() {
         <p className="mt-1 text-sm text-muted-foreground">অ্যাপ মুছে গেলে বা নতুন ফোনে, একই নম্বর ও NID দিয়ে সব হিসাব ফিরে পাবেন।</p>
       )}
       <div className="mt-3 space-y-2">
-        <input className="field" inputMode="tel" placeholder="মোবাইল নম্বর (01XXXXXXXXX)" value={phone} onChange={(e) => setPhone(e.target.value)} />
-        <input className="field" inputMode="numeric" type="password" placeholder="NID নম্বর" value={nid} onChange={(e) => setNid(e.target.value)} />
-        <div className="grid grid-cols-2 gap-2">
-          {!rec && (
-            <button className="btn bg-primary text-primary-foreground" disabled={busy} onClick={() => run(() => setupRecovery(phone, nid), "অনলাইন ব্যাকআপ চালু হয়েছে")}>ব্যাকআপ চালু করুন</button>
-          )}
-          <button className={`btn border ${rec ? "col-span-2" : ""}`} disabled={busy} onClick={() => run(() => recoverFrom(phone, nid), "আগের সব হিসাব ফিরে এসেছে")}>আগের তথ্য নিয়ে আসুন</button>
-        </div>
+        {!rec && !otp && (
+          <>
+            <input className="field" inputMode="tel" placeholder="মোবাইল নম্বর (01XXXXXXXXX)" value={phone} onChange={(e) => setPhone(e.target.value)} />
+            <input className="field" inputMode="numeric" type="password" placeholder="NID নম্বর" value={nid} onChange={(e) => setNid(e.target.value)} />
+            <button className="btn w-full bg-primary text-primary-foreground" disabled={busy} onClick={sendOtp}>WhatsApp-এ কোড পাঠান</button>
+          </>
+        )}
+        {!rec && otp && (
+          <>
+            <p className="text-xs text-muted-foreground">
+              আপনার নিজের WhatsApp ({otp.phone}) চ্যাটে একটি ৪ সংখ্যার কোড পাঠানো হয়েছে — চ্যাটে Send চেপে কোডটি পান, তারপর এখানে লিখুন।
+            </p>
+            <input className="field text-center text-xl tracking-widest" inputMode="numeric" maxLength={4} placeholder="যাচাই কোড" value={codeIn} onChange={(e) => setCodeIn(e.target.value)} />
+            <div className="grid grid-cols-2 gap-2">
+              <button className="btn bg-primary text-primary-foreground" disabled={busy} onClick={confirmOtp}>নিশ্চিত করুন</button>
+              <button className="btn border" disabled={busy} onClick={sendOtp}>কোড আবার পাঠান</button>
+            </div>
+          </>
+        )}
+        <button className="btn w-full border" disabled={busy} onClick={recover}>আগের তথ্য নিয়ে আসুন</button>
       </div>
       <p className="mt-2 text-xs text-muted-foreground">নম্বর ও NID মনে রাখুন — এগুলোই আপনার হিসাবের চাবি। NID কাউকে দেবেন না। ইন্টারনেট লাগবে শুধু আপলোড ও ফেরত আনার সময়।</p>
+    </div>
+  );
+}
+
+// ---------------- Backup reminder popup ----------------
+const REMIND_KEY = "shk-backup-remind-until";
+export function BackupReminder({ open }: { open: Open }) {
+  const db = useDB();
+  const [show, setShow] = useState(false);
+  useEffect(() => {
+    const t = setTimeout(() => {
+      if (getRecovery()) return;
+      if (Date.now() < Number(localStorage.getItem(REMIND_KEY) || 0)) return;
+      if (activeCustomers(db).length + activeTxs(db).length >= 3) setShow(true);
+    }, 2000);
+    return () => clearTimeout(t);
+  }, [db]);
+  if (!show) return null;
+  const later = () => {
+    localStorage.setItem(REMIND_KEY, String(Date.now() + 3 * 864e5));
+    setShow(false);
+  };
+  return (
+    <div className="no-print fixed inset-0 z-50 flex items-center justify-center bg-foreground/40 p-6" onClick={later}>
+      <div className="w-full max-w-sm rounded-2xl bg-card p-5 shadow-xl" onClick={(e) => e.stopPropagation()}>
+        <h2 className="text-lg font-bold">⚠️ আপনার হিসাব কি নিরাপদ?</h2>
+        <p className="mt-2 text-sm text-muted-foreground">
+          ফোন হারিয়ে গেলে বা নষ্ট হলে আপনার সব খাতার হিসাব মুছে যেতে পারে। হিসাব আজীবনের জন্য সুরক্ষিত রাখতে মাত্র ১ মিনিটে ফ্রি অনলাইন ব্যাকআপ চালু করুন।
+        </p>
+        <button className="btn mt-4 w-full bg-primary text-primary-foreground" onClick={() => { setShow(false); open({ kind: "tab", tab: "settings" }); }}>
+          এখনই ব্যাকআপ নিন
+        </button>
+        <button className="btn mt-2 w-full border" onClick={later}>পরে করব</button>
+      </div>
     </div>
   );
 }
