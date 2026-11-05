@@ -41,10 +41,11 @@ export function Label({ children }: { children: ReactNode }) {
   return <label className="mb-1 mt-3 block text-sm font-medium text-muted-foreground">{children}</label>;
 }
 
-export function Stat({ label, value, tone }: { label: string; value: string; tone?: "success" | "danger" }) {
-  const t = tone === "success" ? "text-success" : tone === "danger" ? "text-danger" : "text-foreground";
+export function Stat({ label, value, tone, tint }: { label: string; value: string; tone?: "success" | "danger"; tint?: "success" | "danger" | "primary" }) {
+  const t = tone === "success" || tint === "success" ? "text-success" : tone === "danger" || tint === "danger" ? "text-danger" : tint === "primary" ? "text-primary" : "text-foreground";
+  const bg = tint === "success" ? "bg-success-soft border-success/30" : tint === "danger" ? "bg-danger-soft border-danger/30" : tint === "primary" ? "bg-primary/10 border-primary/30" : "bg-card";
   return (
-    <div className="rounded-xl border bg-card p-3">
+    <div className={`rounded-xl border p-3 ${bg}`}>
       <div className="text-xs text-muted-foreground">{label}</div>
       <div className={`mt-1 text-lg font-bold ${t}`}>{value}</div>
     </div>
