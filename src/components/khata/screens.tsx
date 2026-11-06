@@ -13,7 +13,7 @@ import { setAutoMsg, useAutoMsg, waNumber } from "@/lib/auto-message";
 
 export type Open = (o: { kind: "tx"; type?: TxType; customerId?: string; tx?: Tx } | { kind: "customer" } | { kind: "tab"; tab: string }) => void;
 
-const toneOf = (t: TxType) => (t === "received" || t === "income" ? "text-success" : t === "paid" || t === "expense" ? "text-danger" : t === "credit" ? "text-danger" : "text-success");
+const toneOf = (t: TxType) => (t === "paid" || t === "expense" || t === "credit" ? "text-danger" : "text-success");
 
 function TxRow({ t, db, onEdit }: { t: Tx; db: DB; onEdit?: () => void }) {
   const c = t.customerId ? db.customers.find((x) => x.id === t.customerId) : undefined;
