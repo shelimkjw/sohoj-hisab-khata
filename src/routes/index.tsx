@@ -113,6 +113,11 @@ function App() {
   if (!ready) return <div className="min-h-screen bg-background" />;
   if (db.settings.pinHash && !unlocked) return <PinLock onOk={() => setUnlocked(true)} />;
 
+  // After saving a customer or transaction, return to the main customer list
+  const goCustomers = () => {
+    setTab("customers");
+    if (customerId) setTimeout(() => (history.state?.detail ? history.back() : setCustomerId(null)), 60);
+  };
   const title = customerId ? "গ্রাহকের খাতা" : TABS.find((t) => t.id === tab)?.label;
   return (
     <div className="mx-auto min-h-screen max-w-lg bg-background pb-24">
@@ -164,8 +169,8 @@ function App() {
         </div>
       </nav>
 
-      {txOpen && <TxForm key={txOpen.key} open tx={txOpen.tx} presetType={txOpen.type} presetCustomer={txOpen.customerId} onClose={() => setTxOpen(null)} />}
-      {custOpen && <CustomerForm open onClose={() => setCustOpen(false)} onSaved={(id) => { setTab("customers"); setCustomerId(id); }} />}
+      {txOpen && <TxForm key={txOpen.key} open tx={txOpen.tx} presetType={txOpen.type} presetCustomer={txOpen.customerId} onClose={() => setTxOpen(null)} onSaved={goCustomers} />}
+      {custOpen && <CustomerForm open onClose={() => setCustOpen(false)} onSaved={goCustomers} />}
       <Toaster position="top-center" />
     </div>
   );

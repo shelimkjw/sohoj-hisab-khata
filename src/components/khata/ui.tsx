@@ -1,4 +1,9 @@
-import { useEffect, useRef, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
+
+/** Save area that stays pinned at the bottom of a sheet (above the keyboard). */
+export function SheetFooter({ children }: { children: ReactNode }) {
+  return <div className="sticky bottom-0 -mx-4 mt-5 border-t bg-card px-4 pb-4 pt-3">{children}</div>;
+}
 import { X } from "lucide-react";
 
 export function Sheet({ open, onClose, title, children }: { open: boolean; onClose: () => void; title: string; children: ReactNode }) {
@@ -18,11 +23,21 @@ export function Sheet({ open, onClose, title, children }: { open: boolean; onClo
       }, 0);
     };
   }, [open]); // eslint-disable-line react-hooks/exhaustive-deps
+  // Keep the sheet above the mobile keyboard
+  const [vh, setVh] = useState<number | null>(null);
+  useEffect(() => {
+    const vv = window.visualViewport;
+    if (!open || !vv) return;
+    const upd = () => setVh(vv.height);
+    upd();
+    vv.addEventListener("resize", upd);
+    return () => vv.removeEventListener("resize", upd);
+  }, [open]);
   if (!open) return null;
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-foreground/40 sm:items-center" onClick={onClose}>
+    <div className="fixed inset-x-0 top-0 z-50 flex items-end justify-center bg-foreground/40 sm:items-center" style={{ height: vh ? `${vh}px` : "100dvh" }} onClick={onClose}>
       <div
-        className="max-h-[92vh] w-full max-w-lg overflow-y-auto rounded-t-2xl bg-card p-4 pb-8 sm:rounded-2xl"
+        className="max-h-[92%] w-full max-w-lg overflow-y-auto rounded-t-2xl bg-card px-4 pt-4 sm:rounded-2xl"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="mb-3 flex items-center justify-between">
