@@ -4,7 +4,7 @@ import {
   CUSTOMER_TYPES, TX_LABEL, activeCustomers, customerBalance, deleteTx, isLikelyDuplicate, saveCustomer, saveTx, taka, useDB,
   type Customer, type Tx, type TxType,
 } from "@/lib/ledger";
-import { Label, Sheet } from "./ui";
+import { Label, Sheet, SheetFooter } from "./ui";
 import { sendTxMessage, useAutoMsg, waNumber } from "@/lib/auto-message";
 
 const toLocalInput = (ms: number) => {
@@ -62,12 +62,14 @@ export function CustomerForm({ open, onClose, customer, onSaved }: { open: boole
       </div>
       <Label>নোট</Label>
       <textarea className="field" rows={2} value={f.notes} onChange={set("notes")} />
-      <button className="btn mt-5 w-full bg-primary text-primary-foreground" onClick={submit}>সংরক্ষণ করুন</button>
+      <SheetFooter>
+        <button className="btn w-full bg-primary text-primary-foreground" onClick={submit}>সংরক্ষণ করুন</button>
+      </SheetFooter>
     </Sheet>
   );
 }
 
-export function TxForm({ open, onClose, tx, presetType, presetCustomer }: { open: boolean; onClose: () => void; tx?: Tx | undefined; presetType?: TxType | undefined; presetCustomer?: string | undefined }) {
+export function TxForm({ open, onClose, tx, presetType, presetCustomer, onSaved }: { open: boolean; onClose: () => void; tx?: Tx | undefined; presetType?: TxType | undefined; presetCustomer?: string | undefined; onSaved?: () => void }) {
   const db = useDB();
   const customers = activeCustomers(db).sort((a, b) => a.name.localeCompare(b.name, "bn"));
   const [type, setType] = useState<TxType>(tx?.type ?? presetType ?? "credit");
@@ -99,6 +101,7 @@ export function TxForm({ open, onClose, tx, presetType, presetCustomer }: { open
       toast.success("লেনদেন সংরক্ষিত");
       if (!tx && cid && autoMsg) sendTxMessage(cid, { type, amount: amt, description: description.trim(), date: when });
       onClose();
+      onSaved?.();
     } catch (e) {
       toast.error((e as Error).message || "সংরক্ষণ ব্যর্থ");
     } finally {
@@ -147,7 +150,8 @@ export function TxForm({ open, onClose, tx, presetType, presetCustomer }: { open
           {hasWa ? "📲 সংরক্ষণ করলেই WhatsApp-এ মেসেজ তৈরি হবে" : "⚠️ গ্রাহকের ফোন নম্বর নেই — মেসেজ যাবে না"}
         </p>
       )}
-      <button className="btn mt-5 w-full bg-primary text-primary-foreground" disabled={busy} onClick={submit}>সংরক্ষণ করুন</button>
+      <SheetFooter>
+      <button className="btn w-full bg-primary text-primary-foreground" disabled={busy} onClick={submit}>সংরক্ষণ করুন</button>
       {tx && (
         <button
           className="btn mt-2 w-full border text-danger"
@@ -161,6 +165,7 @@ export function TxForm({ open, onClose, tx, presetType, presetCustomer }: { open
           লেনদেন মুছুন
         </button>
       )}
+      </SheetFooter>
     </Sheet>
   );
 }
