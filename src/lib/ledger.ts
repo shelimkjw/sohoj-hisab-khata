@@ -170,10 +170,7 @@ export function getDB() {
 const serverSnap = empty();
 export function useDB() {
   return useSyncExternalStore(
-    (cb) => {
-      listeners.add(cb);
-      return () => listeners.delete(cb);
-    },
+    subscribeDB,
     getDB,
     () => serverSnap,
   );
