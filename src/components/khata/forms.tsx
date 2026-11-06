@@ -4,7 +4,7 @@ import {
   CUSTOMER_TYPES, TX_LABEL, activeCustomers, customerBalance, deleteTx, isLikelyDuplicate, saveCustomer, saveTx, taka, useDB,
   type Customer, type Tx, type TxType,
 } from "@/lib/ledger";
-import { Label, Sheet } from "./ui";
+import { Label, Sheet, SheetFooter } from "./ui";
 import { sendTxMessage, useAutoMsg, waNumber } from "@/lib/auto-message";
 
 const toLocalInput = (ms: number) => {
